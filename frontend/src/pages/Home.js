@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
+import CatBar from '../components/cat';
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -65,7 +66,9 @@ function Home() {
   };
 
   return (
+   
     <div className="container">
+      <CatBar />
       <h2>Productos disponibles</h2>
       <div className="product-grid">
         {products.map((product) => (

@@ -1,0 +1,23 @@
+.cat-bar {
+  display: flex;
+  gap: 1rem;
+  background: #3b82f6; /* azul tailwind-500 */
+  opacity: 0.95;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.cat-bar-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.cat-bar-btn:hover {
+  background: #2563eb; /* azul más oscuro */
+  color: #fff;
+}

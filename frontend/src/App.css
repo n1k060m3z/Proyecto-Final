@@ -12,7 +12,7 @@ body {
 }
 
 /* NAVBAR */
-.navbar {
+/* .navbar {
   background-color: #ff6a00;
   padding: 1rem 2rem;
   display: flex;
@@ -21,29 +21,29 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-}
+} */
 
-.navbar .logo {
+/* .navbar .logo {
   font-size: 1.5rem;
-  color: white;
+  color: rgb(255, 255, 255);
   font-weight: bold;
   text-decoration: none;
-}
+} */
 
-.navbar .nav-links {
+/* .navbar .nav-links {
   display: flex;
   gap: 1rem;
-}
+} */
 
-.navbar .nav-links a {
+/* .navbar .nav-links a {
   color: white;
   text-decoration: none;
   font-weight: 500;
-}
+} */
 
-.navbar .nav-links a:hover {
+/* .navbar .nav-links a:hover {
   text-decoration: underline;
-}
+} */
 
 /* CONTENEDOR PRINCIPAL */
 .container {
@@ -137,7 +137,7 @@ body {
 
 /* CARRITO */
 .cart {
-  background-color: white;
+  background-color: rgb(255, 255, 255);
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);

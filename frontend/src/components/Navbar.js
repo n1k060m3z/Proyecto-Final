@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
+import './style/navbar.css';
 
 export default function Navbar() {
   const [usuario, setUsuario] = useState(null);
@@ -27,12 +28,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-orange-500 px-4 py-3 shadow-md flex justify-between items-center text-white relative">
-      <Link to="/" className="text-xl font-bold hover:underline">
+    <nav className="navbar">
+      <Link to="/" className="logo">
         FourShop
       </Link>
-
-      <div className="space-x-4 flex items-center">
+      <input></input>
+      <button></button>
+      <div className="space-x-4">
         <Link to="/" className="hover:underline">Inicio</Link>
 
         {!usuario ? (
@@ -44,24 +46,22 @@ export default function Navbar() {
           <div className="relative">
             <button
               onClick={() => setMenuAbierto(!menuAbierto)}
-              className="flex items-center gap-1 hover:underline focus:outline-none"
+              className="user-btn hover:underline focus:outline-none"
             >
               <FaUserCircle className="text-2xl" />
               <span>{usuario}</span>
             </button>
 
             {menuAbierto && (
-              <div className="absolute right-0 mt-2 bg-white text-black rounded shadow-md z-10 w-40">
+              <div className="user-menu">
                 <Link
                   to="/perfil"
-                  className="block px-4 py-2 hover:bg-gray-200"
                   onClick={() => setMenuAbierto(false)}
                 >
                   Mi perfil
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-200"
                 >
                   Cerrar sesión
                 </button>

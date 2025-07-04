@@ -11,6 +11,7 @@ import SellerDashboard from './pages/SellerDashboard';
 import ProductForm from './pages/ProductForm';
 import Navbar from './components/Navbar';
 import './App.css';
+import CatBar from './components/cat';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
