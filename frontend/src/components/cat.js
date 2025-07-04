@@ -1,28 +1,28 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import "./style/cat.css";
 
-// enpoint 
-const categorias = [
-  "Tecnología",
-  "Ropa",
-  "Servicios",
-  "Hogar",
-  "Deportes",
-  "Libros",
-  "Juguetes"
-];
+const CatBar = () => {
+  const [categorias, setCategorias] = useState([]);
 
-const CatBar = () => (
-  <div className="cat-bar">
-    {categorias.map((cat) => (
-      <button
-        key={cat}
-        className="cat-bar-btn"
-      >
-        {cat}
-      </button>
-    ))}
-  </div>
-);
+  useEffect(() => {
+    axios.get("http://localhost:8000/api/categorias/")
+      .then(res => setCategorias(res.data))
+      .catch(() => setCategorias([]));
+  }, []);
+
+  return (
+    <div className="cat-bar">
+      {categorias.map((cat) => (
+        <button
+          key={cat.id}
+          className="cat-bar-btn"
+        >
+          {cat.nombre}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 export default CatBar;

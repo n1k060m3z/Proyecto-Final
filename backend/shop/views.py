@@ -6,12 +6,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 
-from .models import Producto, CarritoItem, Carrito, Pedido, PedidoItem
+from .models import Producto, CarritoItem, Carrito, Pedido, PedidoItem, Categoria
 from .serializers import (
     ProductoSerializer,
     UsuarioSerializer,
     CustomTokenObtainPairSerializer,
     CarritoItemSerializer,
+    CategoriaSerializer,
 )
 
 Usuario = get_user_model()
@@ -137,3 +138,18 @@ class PedidoCreateView(APIView):
         carrito.items.all().delete()
 
         return Response({'mensaje': 'Pedido creado exitosamente'}, status=status.HTTP_201_CREATED)
+
+# --- Vista para listar productos por categoría ---
+class ProductosPorCategoriaView(generics.ListAPIView):
+    serializer_class = ProductoSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        categoria_id = self.kwargs.get('categoria_id')
+        return Producto.objects.filter(categoria_id=categoria_id)
+
+# --- Vista para listar categorías ---
+class CategoriaListView(generics.ListAPIView):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+    permission_classes = [AllowAny]
