@@ -1,12 +1,21 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Producto, Usuario, CarritoItem, Categoria
+from .models import Producto, Usuario, CarritoItem, Categoria, Subcategoria
+
+# --- Serializer para Subcategoria ---
+class SubcategoriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subcategoria
+        fields = '__all__'
+
 
 # --- Serializer para Categoria ---
 class CategoriaSerializer(serializers.ModelSerializer):
+    subcategorias = SubcategoriaSerializer(many=True, read_only=True)
+
     class Meta:
         model = Categoria
-        fields = '__all__'
+        fields = ['id', 'nombre', 'subcategorias']
 
 
 # --- Serializer para Productos ---

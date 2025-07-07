@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
 import CatBar from '../components/cat';
+import Footer from '../components/Footer';
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -94,7 +95,9 @@ function Home() {
           </div>
         ))}
       </div>
+      <Footer />
     </div>
+    
   );
 }
 

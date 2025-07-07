@@ -20,6 +20,14 @@ class Categoria(models.Model):
         return self.nombre
 
 
+class Subcategoria(models.Model):
+    nombre = models.CharField(max_length=100)
+    categoria = models.ForeignKey('Categoria', on_delete=models.CASCADE, related_name='subcategorias')
+
+    def __str__(self):
+        return f"{self.nombre} ({self.categoria.nombre})"
+
+
 class Producto(models.Model):
     vendedor = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='productos')
     nombre = models.CharField(max_length=100)
