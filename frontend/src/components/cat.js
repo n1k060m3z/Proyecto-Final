@@ -80,15 +80,13 @@ const CatBar = () => {
     setActiveDropdown(hovered);
   };
 
-  const handleSubcategoryClick = (subcategoria) => {
-    console.log(`Subcategoría seleccionada: ${subcategoria.nombre}`);
-    setActiveDropdown(null);
+  const handleSubcategoryClick = (subcategoria, categoria) => {
+    window.location.href = `/buscar/${categoria.id}/${subcategoria.id}`;
   };
 
   const handleMainCategoryClick = (categoria) => {
-    console.log(`Categoría principal seleccionada: ${categoria.nombre}`);
     if (!categoria.subcategorias || categoria.subcategorias.length === 0) {
-      setActiveDropdown(null);
+      window.location.href = `/buscar/${categoria.id}`;
     }
   };
 
@@ -140,7 +138,7 @@ const CatBar = () => {
                     <button
                       key={sub.id}
                       className="w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 flex items-center gap-2"
-                      onClick={() => handleSubcategoryClick(sub)}
+                      onClick={() => handleSubcategoryClick(sub, cat)}
                     >
                       <span className="w-2 h-2 bg-blue-400 rounded-full opacity-60"></span>
                       {sub.nombre}

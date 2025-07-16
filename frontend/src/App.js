@@ -12,6 +12,7 @@ import ProductForm from './pages/ProductForm';
 import Navbar from './components/Navbar';
 import './App.css';
 import CatBar from './components/cat';
+import Busqueda from './pages/Busqueda';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
@@ -57,6 +58,10 @@ function App() {
             isAuthenticated && esVendedor ? <ProductForm /> : <Navigate to="/" replace />
           }
         />
+
+        {/* Rutas de búsqueda */}
+        <Route path="/buscar/:categoriaId" element={<Busqueda />} />
+        <Route path="/buscar/:categoriaId/:subcategoriaId" element={<Busqueda />} />
 
         {/* Ruta fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
