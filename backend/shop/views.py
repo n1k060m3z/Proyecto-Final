@@ -153,3 +153,18 @@ class CategoriaListView(generics.ListAPIView):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     permission_classes = [AllowAny]
+
+# --- Vista para cambiar rol de usuario ---
+class CambiarRolUsuarioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        es_vendedor = request.data.get('es_vendedor')
+        if es_vendedor is None:
+            return Response({'error': 'Debes indicar el campo es_vendedor.'}, status=status.HTTP_400_BAD_REQUEST)
+        request.user.es_vendedor = bool(es_vendedor)
+        request.user.save()
+        return Response({
+            'message': 'Rol actualizado correctamente.',
+            'es_vendedor': request.user.es_vendedor
+        }, status=status.HTTP_200_OK)

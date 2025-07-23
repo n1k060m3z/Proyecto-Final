@@ -9,6 +9,7 @@ from .views import (
     PedidoCreateView,
     ProductosPorCategoriaView,
     CategoriaListView,
+    CambiarRolUsuarioView,
 )
 
 urlpatterns = [
@@ -30,4 +31,7 @@ urlpatterns = [
 
     # Categorías
     path('categorias/', CategoriaListView.as_view(), name='listar_categorias'),
+
+    # Cambiar rol de usuario
+    path('usuario/cambiar-rol/', CambiarRolUsuarioView.as_view(), name='cambiar_rol_usuario'),
 ]

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import '../App.css'; // Usamos tus estilos personalizados
 
-const Register = () => {
+const Register = ({ setIsAuthenticated, setEsVendedor }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',

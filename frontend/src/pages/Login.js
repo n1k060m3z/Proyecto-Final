@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast'; // Si usas react-hot-toast
 import '../App.css';
 
-function Login() {
+function Login({ setIsAuthenticated, setEsVendedor }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -25,18 +25,14 @@ function Login() {
 
       const data = await res.json();
 
+      // Guardar el flag como string 'true' o 'false' para evitar problemas de comparación
       localStorage.setItem('token', data.access);
       localStorage.setItem('usuario', username);
-      localStorage.setItem('es_vendedor', data.es_vendedor);
-
+      localStorage.setItem('es_vendedor', data.es_vendedor === true || data.es_vendedor === 'true' ? 'true' : 'false');
+      setIsAuthenticated(true);
+      setEsVendedor(data.es_vendedor === true || data.es_vendedor === 'true');
       toast.success('Bienvenido');
-
-      // Redirigir según rol
-      if (data.es_vendedor) {
-        navigate('/vendedor');
-      } else {
-        navigate('/');
-      }
+      navigate('/'); // Redirigir siempre al inicio
     } catch (err) {
       console.error(err);
       toast.error('Error al conectar con el servidor');
