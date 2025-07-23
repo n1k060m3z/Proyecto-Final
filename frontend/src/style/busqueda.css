@@ -3,12 +3,16 @@
   min-height: 100vh;
   padding: 0;
   display: flex;
+  justify-content: flex-start; /* Asegura que el sidebar esté a la izquierda */
 }
 
 .busqueda-sidebar {
   width: 260px;
   background: #f5f5f5;
-  padding: 32px 16px 0 32px;
+  padding: 32px 0 0 0;
+  margin-left: 0;
+  align-items: flex-start;
+  /* Elimina cualquier margen o padding extra que lo desplace */
 }
 
 .busqueda-sidebar h2 {

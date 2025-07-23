@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import CatBar from '../components/cat';
 
 function Cart() {
   const [items, setItems] = useState([]);
@@ -100,48 +101,51 @@ function Cart() {
   if (loading) return <p className="p-4">Cargando carrito...</p>;
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Carrito de Compras</h2>
-      {items.length === 0 ? (
-        <p>Tu carrito está vacío.</p>
-      ) : (
-        <>
-          <div className="grid gap-4">
-            {items.map((item) =>
-              item.producto ? (
-                <div key={item.id} className="flex items-center justify-between p-4 border rounded">
-                  <div>
-                    <p className="font-semibold">{item.producto.nombre}</p>
-                    <p>${item.producto.precio}</p>
-                    <p className="text-sm">Cantidad: {item.cantidad}</p>
+    <div className="container">
+      <CatBar />
+      <div className="p-4">
+        <h2 className="text-xl font-bold mb-4">Carrito de Compras</h2>
+        {items.length === 0 ? (
+          <p>Tu carrito está vacío.</p>
+        ) : (
+          <>
+            <div className="grid gap-4">
+              {items.map((item) =>
+                item.producto ? (
+                  <div key={item.id} className="flex items-center justify-between p-4 border rounded">
+                    <div>
+                      <p className="font-semibold">{item.producto.nombre}</p>
+                      <p>${item.producto.precio}</p>
+                      <p className="text-sm">Cantidad: {item.cantidad}</p>
+                    </div>
+                    <button
+                      onClick={() => eliminarDelCarrito(item.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                    >
+                      Eliminar
+                    </button>
                   </div>
-                  <button
-                    onClick={() => eliminarDelCarrito(item.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              ) : (
-                <p key={item.id} className="text-red-500">Error: producto no disponible</p>
-              )
-            )}
-          </div>
+                ) : (
+                  <p key={item.id} className="text-red-500">Error: producto no disponible</p>
+                )
+              )}
+            </div>
 
-          <div className="cart-total mt-4 text-right font-bold text-lg">
-            Total: ${total.toFixed(2)}
-          </div>
+            <div className="cart-total mt-4 text-right font-bold text-lg">
+              Total: ${total.toFixed(2)}
+            </div>
 
-          <div className="mt-4 text-right">
-            <button
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-              onClick={finalizarCompra}
-            >
-              Finalizar compra
-            </button>
-          </div>
-        </>
-      )}
+            <div className="mt-4 text-right">
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                onClick={finalizarCompra}
+              >
+                Finalizar compra
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

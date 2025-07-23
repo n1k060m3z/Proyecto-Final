@@ -1,5 +1,12 @@
+import CatBar from '../components/cat';
+
 function ProductPage() {
-  return <div>Detalles del producto</div>
+  return (
+    <div className="container">
+      <CatBar />
+      <div>Detalles del producto</div>
+    </div>
+  );
 }
 
-export default ProductPage
+export default ProductPage;
