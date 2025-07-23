@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -15,12 +15,15 @@ import CatBar from './components/cat';
 import Busqueda from './pages/Busqueda';
 
 function App() {
-  const isAuthenticated = !!localStorage.getItem('token');
-  const esVendedor = localStorage.getItem('es_vendedor') === 'true';
+  // Estado global reactivo
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const [esVendedor, setEsVendedor] = useState(localStorage.getItem('es_vendedor') === 'true' || localStorage.getItem('es_vendedor') === true);
+
+  console.log('isAuthenticated:', isAuthenticated, 'esVendedor:', esVendedor, 'token:', localStorage.getItem('token'));
 
   return (
     <Router>
-      <Navbar />
+      <Navbar isAuthenticated={isAuthenticated} esVendedor={esVendedor} setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} />
       <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -28,11 +31,11 @@ function App() {
         {/* Rutas públicas */}
         <Route
           path="/iniciar-sesion"
-          element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />}
+          element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} /> : <Navigate to="/" replace />}
         />
         <Route
           path="/registro"
-          element={!isAuthenticated ? <Register /> : <Navigate to="/" replace />}
+          element={!isAuthenticated ? <Register setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} /> : <Navigate to="/" replace />}
         />
 
         {/* Rutas privadas */}

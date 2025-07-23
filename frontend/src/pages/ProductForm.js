@@ -17,16 +17,25 @@ function ProductForm() {
 
     try {
       const token = localStorage.getItem('token');
+      console.log('Token usado para crear producto:', token); // LOG DE DEPURACIÓN
       const res = await axios.post('http://127.0.0.1:8000/api/productos/crear/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
         }
       });
+      console.log('Status de respuesta crear producto:', res.status); // LOG NUEVO
+      console.log('Datos de respuesta crear producto:', res.data); // LOG NUEVO
       alert('Producto creado correctamente');
     } catch (error) {
-      console.error(error);
-      alert('Error al crear el producto');
+      if (error.response) {
+        console.error('Status error crear producto:', error.response.status); // LOG NUEVO
+        console.error('Datos error crear producto:', error.response.data); // LOG NUEVO
+        alert('Error al crear el producto: ' + JSON.stringify(error.response.data));
+      } else {
+        console.error(error);
+        alert('Error al crear el producto');
+      }
     }
   };
 

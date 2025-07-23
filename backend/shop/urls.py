@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .views import (
     ProductoListView,
     ProductoCreateView,
@@ -11,6 +12,7 @@ from .views import (
     CategoriaListView,
     SubcategoriaDetailView,
     CategoriaDetailView,
+    CambiarRolUsuarioView,
 )
 
 urlpatterns = [
@@ -30,8 +32,12 @@ urlpatterns = [
     # Pedidos
     path('pedido/', PedidoCreateView.as_view(), name='crear-pedido'),
 
+
     # Categorías
     path('categorias/', CategoriaListView.as_view(), name='listar_categorias'),
     path('categorias/<int:pk>/', CategoriaDetailView.as_view(), name='detalle_categoria'),
     path('subcategorias/<int:pk>/', SubcategoriaDetailView.as_view(), name='detalle_subcategoria'),
+
+    # Cambiar rol de usuario
+    path('usuario/cambiar-rol/', CambiarRolUsuarioView.as_view(), name='cambiar_rol_usuario'),
 ]

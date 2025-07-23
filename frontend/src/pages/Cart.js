@@ -16,6 +16,8 @@ function Cart() {
       return;
     }
 
+    console.log('Token usado para carrito:', token); // LOG DE DEPURACIÓN
+
     const cargarCarrito = async () => {
       try {
         const res = await fetch('http://localhost:8000/api/carrito/', {
@@ -25,6 +27,10 @@ function Cart() {
           },
         });
 
+        console.log('Status de respuesta carrito:', res.status); // LOG NUEVO
+        const responseText = await res.clone().text();
+        console.log('Texto de respuesta carrito:', responseText); // LOG NUEVO
+
         if (res.status === 401) {
           toast.error('Sesión expirada. Inicia sesión de nuevo');
           localStorage.clear();
@@ -33,11 +39,10 @@ function Cart() {
         }
 
         if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(errorText);
+          throw new Error(responseText);
         }
 
-        const data = await res.json();
+        const data = JSON.parse(responseText);
         setItems(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error al cargar el carrito:', err);

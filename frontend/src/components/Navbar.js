@@ -3,26 +3,24 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
 import './style/navbar.css';
 
-export default function Navbar() {
+export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated, setEsVendedor }) {
   const [usuario, setUsuario] = useState(null);
-  const [esVendedor, setEsVendedor] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const nombreGuardado = localStorage.getItem('usuario');
-    const vendedorFlag = localStorage.getItem('es_vendedor') === 'true';
     setUsuario(nombreGuardado);
-    setEsVendedor(vendedorFlag);
     setMenuAbierto(false);
-  }, [location]);
+  }, [location, isAuthenticated]);
 
   const handleLogout = () => {
     localStorage.removeItem('usuario');
     localStorage.removeItem('token');
     localStorage.removeItem('es_vendedor');
     setUsuario(null);
+    setIsAuthenticated(false);
     setEsVendedor(false);
     navigate('/iniciar-sesion');
   };
@@ -74,7 +72,7 @@ export default function Navbar() {
 
         {/* Solo mostrar si es vendedor */}
         {usuario && esVendedor && (
-          <Link to="/vendedor" className="hover:underline">Vendedor</Link>
+          <Link to="/vendedor/nuevo" className="hover:underline">Vender</Link>
         )}
       </div>
     </nav>
