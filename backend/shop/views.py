@@ -5,14 +5,35 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
+from .models import Subcategoria, Categoria, Producto, CarritoItem, Carrito, Pedido, PedidoItem, Usuario
+from .serializers import SubcategoriaSerializer, CategoriaSerializer, ProductoSerializer, UsuarioSerializer, CustomTokenObtainPairSerializer, CarritoItemSerializer
+    # --- Vista para obtener una subcategoría por ID ---
+class SubcategoriaDetailView(generics.RetrieveAPIView):
+    queryset = Subcategoria.objects.all()
+    serializer_class = SubcategoriaSerializer
+    permission_classes = [AllowAny]
 
-from .models import Producto, CarritoItem, Carrito, Pedido, PedidoItem, Categoria
+# --- Vista para obtener una categoría por ID ---
+class CategoriaDetailView(generics.RetrieveAPIView):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+    permission_classes = [AllowAny]
+from rest_framework import status, permissions, generics
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import get_user_model
+
+from .models import Producto, CarritoItem, Carrito, Pedido, PedidoItem, Categoria, Subcategoria
 from .serializers import (
     ProductoSerializer,
     UsuarioSerializer,
     CustomTokenObtainPairSerializer,
     CarritoItemSerializer,
     CategoriaSerializer,
+    SubcategoriaSerializer,
 )
 
 Usuario = get_user_model()

@@ -9,6 +9,8 @@ from .views import (
     PedidoCreateView,
     ProductosPorCategoriaView,
     CategoriaListView,
+    SubcategoriaDetailView,
+    CategoriaDetailView,
 )
 
 urlpatterns = [
@@ -30,4 +32,6 @@ urlpatterns = [
 
     # Categorías
     path('categorias/', CategoriaListView.as_view(), name='listar_categorias'),
+    path('categorias/<int:pk>/', CategoriaDetailView.as_view(), name='detalle_categoria'),
+    path('subcategorias/<int:pk>/', SubcategoriaDetailView.as_view(), name='detalle_subcategoria'),
 ]

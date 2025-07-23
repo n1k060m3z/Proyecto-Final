@@ -4,25 +4,8 @@ import { useParams } from "react-router-dom";
 import "../style/busqueda.css";
 import CatBar from '../components/cat';
 
-const filtrosEjemplo = {
-	categorias: [
-		{ nombre: "Electrodomésticos", cantidad: 6 },
-		{ nombre: "Fotocopiadoras", cantidad: 1 },
-		{ nombre: "Otros", cantidad: 38 },
-	],
-	ubicaciones: [
-		{ nombre: "Bogotá D.C.", cantidad: 26 },
-		{ nombre: "Antioquia", cantidad: 5 },
-		{ nombre: "Risaralda", cantidad: 3 },
-		{ nombre: "Tolima", cantidad: 3 },
-		{ nombre: "Valle Del Cauca", cantidad: 3 },
-		{ nombre: "Cundinamarca", cantidad: 2 },
-		{ nombre: "Atlántico", cantidad: 1 },
-		{ nombre: "Cauca", cantidad: 1 },
-		{ nombre: "Quindio", cantidad: 1 },
-	],
-	tiendas: [{ nombre: "Solo tiendas oficiales", cantidad: 1 }],
-};
+// ...existing code...
+// El conteo de categorías será dinámico
 
 const categoriaNombresPorDefecto = {
 	1: "Tecnología",
@@ -40,35 +23,113 @@ const Busqueda = () => {
 	const [productos, setProductos] = useState([]);
 	const [titulo, setTitulo] = useState("");
 	const [orden, setOrden] = useState("relevantes");
+	const [categoriasSidebar, setCategoriasSidebar] = useState([]);
+const filtrosEjemplo = {
+	ubicaciones: [
+		{ nombre: "Bogotá D.C.", cantidad: 26 },
+		{ nombre: "Antioquia", cantidad: 5 },
+		{ nombre: "Risaralda", cantidad: 3 },
+		{ nombre: "Tolima", cantidad: 3 },
+		{ nombre: "Valle Del Cauca", cantidad: 3 },
+		{ nombre: "Cundinamarca", cantidad: 2 },
+		{ nombre: "Atlántico", cantidad: 1 },
+		{ nombre: "Cauca", cantidad: 1 },
+		{ nombre: "Quindio", cantidad: 1 },
+	],
+	tiendas: [{ nombre: "Solo tiendas oficiales", cantidad: 1 }],
+};
 
 	useEffect(() => {
 		let url = "http://localhost:8000/api/productos/";
 		if (subcategoriaId) {
-			url = `http://localhost:8000/api/productos/subcategoria/${subcategoriaId}/`;
+			url = `http://localhost:8000/api/productos/`;
 		} else if (categoriaId) {
 			url = `http://localhost:8000/api/productos/categoria/${categoriaId}/`;
 		}
 		axios
 			.get(url)
-			.then((res) => setProductos(res.data))
+			.then((res) => {
+				let productosFiltrados = res.data;
+				if (subcategoriaId) {
+					productosFiltrados = productosFiltrados.filter(p => {
+						if (p.subcategoria && typeof p.subcategoria === 'object' && 'id' in p.subcategoria) {
+							return p.subcategoria.id == subcategoriaId;
+						}
+						return p.subcategoria == subcategoriaId;
+					});
+				}
+// Normalizar la URL de imagen para asegurar que siempre sea absoluta
+				productosFiltrados = productosFiltrados.map(p => {
+					if (p.imagen) {
+						if (/^https?:\/\//.test(p.imagen)) {
+							// url absoluta, no modificar
+						} else if (/^\/media\//.test(p.imagen)) {
+							p.imagen = `${window.location.origin}${p.imagen}`;
+						} else if (/^media\//.test(p.imagen)) {
+							p.imagen = `${window.location.origin}/${p.imagen}`;
+						} else if (/^productos\//.test(p.imagen)) {
+							p.imagen = `${window.location.origin}/media/${p.imagen}`;
+						} else {
+							p.imagen = `${window.location.origin}/media/productos/${p.imagen}`;
+						}
+					}
+					return p;
+				});
+				console.log(productosFiltrados);
+				setProductos(productosFiltrados);
+			})
 			.catch(() => setProductos([]));
 	}, [categoriaId, subcategoriaId]);
 
 	useEffect(() => {
+		// Obtener categorías y conteo de productos dinámicamente
+		axios.get("http://localhost:8000/api/categorias/")
+			.then((res) => {
+				const categorias = res.data;
+				if (!Array.isArray(categorias)) {
+					setCategoriasSidebar([]);
+					return;
+				}
+				Promise.all(
+					categorias.map(async (cat) => {
+						let count = 0;
+						try {
+							const prodRes = await axios.get(`http://localhost:8000/api/productos/categoria/${cat.id}/`);
+							// Si la respuesta es un array, filtra los productos que realmente tienen la categoría
+							if (Array.isArray(prodRes.data)) {
+								count = prodRes.data.filter(p => {
+									if (p.categoria && typeof p.categoria === 'object' && 'id' in p.categoria) {
+										return p.categoria.id === cat.id;
+									}
+									return p.categoria === cat.id;
+								}).length;
+							} else {
+								count = 0;
+							}
+						} catch {
+							count = 0;
+						}
+						return { nombre: cat.nombre, cantidad: count };
+					})
+				).then((categoriasConConteo) => {
+					setCategoriasSidebar(categoriasConConteo);
+				});
+			})
+			.catch(() => setCategoriasSidebar([]));
+	}, []);
+
+	useEffect(() => {
 		if (subcategoriaId) {
-			// Primero obtenemos la subcategoría
 			axios
 				.get(`http://localhost:8000/api/subcategorias/${subcategoriaId}/`)
 				.then((res) => {
 					const nombreSub = res.data.nombre;
 					const categoriaIdFromSub = res.data.categoria || categoriaId;
 					if (categoriaIdFromSub) {
-						// Ahora obtenemos el nombre de la categoría principal
 						axios
 							.get(`http://localhost:8000/api/categorias/${categoriaIdFromSub}/`)
 							.then((catRes) => {
 								const nombreCategoria = catRes.data.nombre || categoriaNombresPorDefecto[categoriaIdFromSub] || "";
-								// Si la categoría es Tecnología, Ropa o Servicios, usa el formato solicitado
 								if (["Tecnología", "Ropa", "Servicios"].includes(nombreCategoria)) {
 									setTitulo(`${nombreCategoria} - ${nombreSub}`);
 								} else {
@@ -83,7 +144,6 @@ const Busqueda = () => {
 					}
 				})
 				.catch(() => {
-					// Si falla la subcategoría, intenta mostrar la categoría
 					if (categoriaId) {
 						axios
 							.get(`http://localhost:8000/api/categorias/${categoriaId}/`)
@@ -110,8 +170,19 @@ const Busqueda = () => {
 	}, [categoriaId, subcategoriaId]);
 
 	const handleOrdenChange = (e) => {
-		setOrden(e.target.value);
-		// Aquí podrías ordenar los productos según la opción seleccionada
+		const value = e.target.value;
+		setOrden(value);
+		let productosOrdenados = [...productos];
+		if (value === "precio_menor") {
+			productosOrdenados.sort((a, b) => (a.precio || 0) - (b.precio || 0));
+		} else if (value === "precio_mayor") {
+			productosOrdenados.sort((a, b) => (b.precio || 0) - (a.precio || 0));
+		}
+		setProductos(productosOrdenados);
+	};
+
+	const handleCategoriaClick = (cat, idx) => {
+		window.location.href = `/buscar/${idx + 1}`;
 	};
 
 	return (
@@ -122,32 +193,28 @@ const Busqueda = () => {
 					<h2>{titulo}</h2>
 					<div className="resultados">{productos.length} resultados</div>
 					<div className="filtro-titulo">Categorías</div>
-					{filtrosEjemplo.categorias.map((cat) => (
-						<button key={cat.nombre} className="filtro-link">
-							{cat.nombre}{" "}
-							<span style={{ color: "#888" }}>({cat.cantidad})</span>
+					{categoriasSidebar.map((cat, idx) => (
+						<button key={cat.nombre} className="filtro-link" onClick={() => handleCategoriaClick(cat, idx)}>
+							{cat.nombre} <span style={{ color: "#888" }}>({cat.cantidad})</span>
 						</button>
 					))}
 					<div className="filtro-titulo">Ubicación</div>
+					{/* Puedes dejar ubicaciones y tiendas como estaban, o hacerlos dinámicos si lo necesitas */}
 					{filtrosEjemplo.ubicaciones.map((ubi) => (
 						<button key={ubi.nombre} className="filtro-link">
-							{ubi.nombre}{" "}
-							<span style={{ color: "#888" }}>({ubi.cantidad})</span>
+							{ubi.nombre} <span style={{ color: "#888" }}>({ubi.cantidad})</span>
 						</button>
 					))}
 					<div className="filtro-titulo">Tiendas oficiales</div>
 					{filtrosEjemplo.tiendas.map((tienda) => (
 						<button key={tienda.nombre} className="filtro-link">
-							{tienda.nombre}{" "}
-							<span style={{ color: "#888" }}>({tienda.cantidad})</span>
+							{tienda.nombre} <span style={{ color: "#888" }}>({tienda.cantidad})</span>
 						</button>
 					))}
 				</aside>
 				<main className="busqueda-main">
 					<div className="ordenar-bar">
-						<span
-							style={{ color: "#888", fontSize: 15, marginRight: 8 }}
-						>
+						<span style={{ color: "#888", fontSize: 15, marginRight: 8 }}>
 							Ordenar por
 						</span>
 						<select
