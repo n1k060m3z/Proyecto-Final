@@ -30,8 +30,24 @@ export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated
       <Link to="/" className="logo">
         FourShop
       </Link>
-      <input></input>
-      <button></button>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          const value = e.target.elements.search.value.trim();
+          if (value) navigate(`/buscar?q=${encodeURIComponent(value)}`);
+        }}
+        style={{ display: 'inline-block', margin: '0 16px' }}
+      >
+        <input
+          name="search"
+          type="text"
+          placeholder="Buscar productos..."
+          style={{ padding: '6px 12px', borderRadius: 4, border: '1px solid #2563eb', width: 180, background: '#e3eafe', color: '#222', fontSize: 16, fontWeight: 500 }}
+        />
+        <button type="submit" style={{ padding: '6px 12px', borderRadius: 4, background: '#2563eb', color: 'white', border: 'none', marginLeft: 4, fontWeight: 600 }}>
+          Buscar
+        </button>
+      </form>
       <div className="space-x-4">
         <Link to="/" className="hover:underline">Inicio</Link>
 

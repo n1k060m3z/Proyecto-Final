@@ -10,6 +10,7 @@ import ResumenPedido from './pages/ResumenPedido'; // ✅ NUEVO
 import SellerDashboard from './pages/SellerDashboard';
 import ProductForm from './pages/ProductForm';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import './App.css';
 import CatBar from './components/cat';
 import Busqueda from './pages/Busqueda';
@@ -25,50 +26,51 @@ function App() {
     <Router>
       <Navbar isAuthenticated={isAuthenticated} esVendedor={esVendedor} setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} />
       <Toaster position="top-center" reverseOrder={false} />
-      <Routes>
-        <Route path="/" element={<Home />} />
-
-        {/* Rutas públicas */}
-        <Route
-          path="/iniciar-sesion"
-          element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} /> : <Navigate to="/" replace />}
-        />
-        <Route
-          path="/registro"
-          element={!isAuthenticated ? <Register setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} /> : <Navigate to="/" replace />}
-        />
-
-        {/* Rutas privadas */}
-        <Route
-          path="/carrito"
-          element={isAuthenticated ? <Cart /> : <Navigate to="/iniciar-sesion" replace />}
-        />
-        <Route
-          path="/resumen-pedido"
-          element={isAuthenticated ? <ResumenPedido /> : <Navigate to="/iniciar-sesion" replace />}
-        />
-
-        {/* Rutas para vendedores */}
-        <Route
-          path="/vendedor"
-          element={
-            isAuthenticated && esVendedor ? <SellerDashboard /> : <Navigate to="/" replace />
-          }
-        />
-        <Route
-          path="/vendedor/nuevo"
-          element={
-            isAuthenticated && esVendedor ? <ProductForm /> : <Navigate to="/" replace />
-          }
-        />
-
-        {/* Rutas de búsqueda */}
-        <Route path="/buscar/:categoriaId" element={<Busqueda />} />
-        <Route path="/buscar/:categoriaId/:subcategoriaId" element={<Busqueda />} />
-
-        {/* Ruta fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <div style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1 }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            {/* Rutas públicas */}
+            <Route
+              path="/iniciar-sesion"
+              element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/registro"
+              element={!isAuthenticated ? <Register setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} /> : <Navigate to="/" replace />}
+            />
+            {/* Rutas privadas */}
+            <Route
+              path="/carrito"
+              element={isAuthenticated ? <Cart /> : <Navigate to="/iniciar-sesion" replace />}
+            />
+            <Route
+              path="/resumen-pedido"
+              element={isAuthenticated ? <ResumenPedido /> : <Navigate to="/iniciar-sesion" replace />}
+            />
+            {/* Rutas para vendedores */}
+            <Route
+              path="/vendedor"
+              element={
+                isAuthenticated && esVendedor ? <SellerDashboard /> : <Navigate to="/" replace />
+              }
+            />
+            <Route
+              path="/vendedor/nuevo"
+              element={
+                isAuthenticated && esVendedor ? <ProductForm /> : <Navigate to="/" replace />
+              }
+            />
+            {/* Rutas de búsqueda */}
+            <Route path="/buscar" element={<Busqueda />} />
+            <Route path="/buscar/:categoriaId" element={<Busqueda />} />
+            <Route path="/buscar/:categoriaId/:subcategoriaId" element={<Busqueda />} />
+            {/* Ruta fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+        <Footer />
+      </div>
     </Router>
   );
 }

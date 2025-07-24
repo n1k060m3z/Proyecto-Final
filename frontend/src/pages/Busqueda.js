@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import "../style/busqueda.css";
 import CatBar from '../components/cat';
 
@@ -14,12 +14,13 @@ const categoriaNombresPorDefecto = {
 	4: "Hogar y Oficina",
 	5: "Deportes",
 	6: "Libros",
-	7: "Juguetes",
+	7: "Videojuegos",
 	// Agrega aquí los IDs y nombres de tus categorías principales
 };
 
 const Busqueda = () => {
 	const { categoriaId, subcategoriaId } = useParams();
+	const location = useLocation();
 	const [productos, setProductos] = useState([]);
 	const [titulo, setTitulo] = useState("");
 	const [orden, setOrden] = useState("relevantes");
@@ -41,45 +42,47 @@ const filtrosEjemplo = {
 
 	useEffect(() => {
 		let url = "http://localhost:8000/api/productos/";
-		if (subcategoriaId) {
-			url = `http://localhost:8000/api/productos/`;
-		} else if (categoriaId) {
-			url = `http://localhost:8000/api/productos/categoria/${categoriaId}/`;
-		}
 		axios
 			.get(url)
 			.then((res) => {
 				let productosFiltrados = res.data;
-				if (subcategoriaId) {
-					productosFiltrados = productosFiltrados.filter(p => {
-						if (p.subcategoria && typeof p.subcategoria === 'object' && 'id' in p.subcategoria) {
-							return p.subcategoria.id == subcategoriaId;
-						}
-						return p.subcategoria == subcategoriaId;
-					});
-				}
-// Normalizar la URL de imagen para asegurar que siempre sea absoluta
-				productosFiltrados = productosFiltrados.map(p => {
-					if (p.imagen) {
-						if (/^https?:\/\//.test(p.imagen)) {
-							// url absoluta, no modificar
-						} else if (/^\/media\//.test(p.imagen)) {
-							p.imagen = `${window.location.origin}${p.imagen}`;
-						} else if (/^media\//.test(p.imagen)) {
-							p.imagen = `${window.location.origin}/${p.imagen}`;
-						} else if (/^productos\//.test(p.imagen)) {
-							p.imagen = `${window.location.origin}/media/${p.imagen}`;
-						} else {
-							p.imagen = `${window.location.origin}/media/productos/${p.imagen}`;
-						}
+				// Si hay búsqueda, filtrar solo por el query
+				const params = new URLSearchParams(location.search);
+				const q = params.get('q');
+				if (q) {
+					productosFiltrados = productosFiltrados.filter(p =>
+						p.nombre && p.nombre.toLowerCase().includes(q.toLowerCase())
+					);
+				} else {
+					// Si no hay búsqueda, filtrar por categoría/subcategoría
+					if (subcategoriaId) {
+						productosFiltrados = productosFiltrados.filter(p => {
+							if (p.subcategoria && typeof p.subcategoria === 'object' && 'id' in p.subcategoria) {
+								return p.subcategoria.id == subcategoriaId;
+							}
+							return p.subcategoria == subcategoriaId;
+						});
+					} else if (categoriaId) {
+						productosFiltrados = productosFiltrados.filter(p => {
+							if (p.categoria && typeof p.categoria === 'object' && 'id' in p.categoria) {
+								return p.categoria.id == categoriaId;
+							}
+							return p.categoria == categoriaId;
+						});
 					}
-					return p;
-				});
-				console.log(productosFiltrados);
+				}
+
+				// Normalizar la URL de imagen para asegurar que siempre sea absoluta
+			   productosFiltrados = productosFiltrados.map(p => {
+				   if (p.imagen && p.imagen.startsWith('/media/productos/')) {
+					   p.imagen = `http://localhost:8000${p.imagen}`;
+				   }
+				   return p;
+			   });
 				setProductos(productosFiltrados);
 			})
 			.catch(() => setProductos([]));
-	}, [categoriaId, subcategoriaId]);
+	}, [categoriaId, subcategoriaId, location.search]);
 
 	useEffect(() => {
 		// Obtener categorías y conteo de productos dinámicamente
@@ -181,9 +184,13 @@ const filtrosEjemplo = {
 		setProductos(productosOrdenados);
 	};
 
-	const handleCategoriaClick = (cat, idx) => {
-		window.location.href = `/buscar/${idx + 1}`;
-	};
+const handleCategoriaClick = (cat, idx) => {
+	window.location.href = `/buscar/${idx + 1}`;
+};
+
+// Si la búsqueda es global, mostrar solo el resultado exacto y no el sidebar de categorías ni filtros
+const params = new URLSearchParams(location.search);
+const q = params.get('q');
 
 	return (
 		<div className="container">
@@ -243,7 +250,7 @@ const filtrosEjemplo = {
 								<div className="producto-nombre">{producto.nombre}</div>
 								<div className="producto-precio">
 									{producto.precio
-										? `$ ${producto.precio.toLocaleString()}`
+										? `$ ${Math.floor(producto.precio).toLocaleString()}`
 										: "Precio a convenir"}
 								</div>
 								<div className="producto-ciudad">
