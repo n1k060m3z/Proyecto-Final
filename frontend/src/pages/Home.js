@@ -5,6 +5,7 @@ import CatBar from '../components/cat';
 
 function Home() {
   const navigate = useNavigate();
+  // Accesos directos como en cap1
   const categoriasAcceso = [
     {
       nombre: 'Computadores',
@@ -33,23 +34,80 @@ function Home() {
     },
   ];
 
+  // Ofertas por categoría: Tecnología, Ropa, Servicios, Hogar, Deportes, Libros, Videojuegos
+  const ofertasCategorias = [
+    {
+      nombre: 'Tecnología',
+      img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
+      ruta: '/buscar/tecnologia',
+    },
+    {
+      nombre: 'Ropa',
+      img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80',
+      ruta: '/buscar/ropa',
+    },
+    {
+      nombre: 'Servicios',
+      img: 'https://www.albaniles.org/wp-content/uploads/2016/08/plomero1.jpg',
+      ruta: '/buscar/servicios',
+    },
+    {
+      nombre: 'Hogar',
+      img: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80',
+      ruta: '/buscar/hogar',
+    },
+    {
+      nombre: 'Deportes',
+      img: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=400&q=80',
+      ruta: '/buscar/deportes',
+    },
+    {
+      nombre: 'Libros',
+      img: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80',
+      ruta: '/buscar/libros',
+    },
+    {
+      nombre: 'Videojuegos',
+      img: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=400&q=80',
+      ruta: '/buscar/videojuegos',
+    },
+  ];
+
   return (
-    <div className="container">
-      <CatBar />
-      <h2 style={{ marginTop: 24, marginBottom: 12 }}>Accesos directos</h2>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center', marginBottom: 32 }}>
+    <div className="container" style={{ background: '#f7f9fa', minHeight: '100vh', paddingBottom: 32 }}>
+      {/* Barra de categorías ajustada al texto */}
+      <div className="categorias-bar categorias-bar-ajustada categorias-bar-mas-estrecha">
+        <CatBar />
+      </div>
+
+      <h2 className="accesos-directos-titulo">Accesos directos</h2>
+      <div className="accesos-directos-lista">
         {categoriasAcceso.map(cat => (
           <div
             key={cat.nombre}
-            style={{ width: 200, height: 200, background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px #0002', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2.5px solid #2563eb', transition: 'box-shadow 0.2s', fontSize: 18 }}
+            className="acceso-card"
             onClick={() => navigate(cat.ruta)}
           >
             <img
               src={cat.img}
               alt={cat.nombre}
-              style={{ width: 110, height: 110, objectFit: 'contain', marginBottom: 12 }}
             />
-            <span style={{ color: '#2563eb', fontWeight: 600, fontSize: 20 }}>{cat.nombre}</span>
+            <span>{cat.nombre}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Sección Ofertas por categoría actualizada */}
+      <h2 className="ofertas-titulo">Ofertas por categoría</h2>
+      <div className="ofertas-categorias-lista">
+        {ofertasCategorias.map(cat => (
+          <div
+            key={cat.nombre}
+            className="oferta-cat-card"
+            onClick={() => navigate(cat.ruta)}
+          >
+            <img src={cat.img} alt={cat.nombre} />
+            <span>{cat.nombre}</span>
           </div>
         ))}
       </div>
