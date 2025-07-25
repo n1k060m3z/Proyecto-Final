@@ -44,20 +44,14 @@ export default CatBar; */
 import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import axios from "axios";
+
 const CatBar = () => {
   const [categorias, setCategorias] = useState([]);
   const [hovered, setHovered] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
 
-  // Datos de ejemplo para la demostración
   useEffect(() => {
-    // Simulando datos de la API
-    
-
-  
-    
-    // Descomenta esta línea para usar tu API real
-     axios.get("http://localhost:8000/api/categorias/")
+    axios.get("http://localhost:8000/api/categorias/")
       .then(res => setCategorias(res.data))
       .catch(() => setCategorias([]));
   }, []);
@@ -69,14 +63,12 @@ const CatBar = () => {
 
   const handleMouseLeave = () => {
     setHovered(null);
-    // Pequeño delay para evitar que se cierre inmediatamente
     setTimeout(() => {
       setActiveDropdown(null);
     }, 150);
   };
 
   const handleDropdownMouseEnter = () => {
-    // Mantener el dropdown abierto cuando el mouse está sobre él
     setActiveDropdown(hovered);
   };
 
@@ -134,7 +126,7 @@ const CatBar = () => {
                   onMouseLeave={handleMouseLeave}
                 >
                   <div className="absolute -top-2 left-4 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45"></div>
-                  {cat.subcategorias.map((sub, index) => (
+                  {cat.subcategorias.map((sub) => (
                     <button
                       key={sub.id}
                       className="w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 flex items-center gap-2"

@@ -121,6 +121,19 @@ const filtrosEjemplo = {
 	}, []);
 
 	useEffect(() => {
+		if (subcategoriaId && categoriaId === "5") {
+			// Si es deportes y subcategoría, mostrar el nombre fijo
+			const sub = [
+				{ id: "51", nombre: "Fútbol" },
+				{ id: "52", nombre: "Atletismo" },
+				{ id: "53", nombre: "Ciclismo" },
+				{ id: "54", nombre: "Otros" },
+			].find(s => s.id === subcategoriaId);
+			if (sub) {
+				setTitulo(`Deportes - ${sub.nombre}`);
+				return;
+			}
+		}
 		if (subcategoriaId) {
 			api
 				.get(`http://localhost:8000/api/subcategorias/${subcategoriaId}/`)
@@ -132,7 +145,7 @@ const filtrosEjemplo = {
 							.get(`http://localhost:8000/api/categorias/${categoriaIdFromSub}/`)
 							.then((catRes) => {
 								const nombreCategoria = catRes.data.nombre || categoriaNombresPorDefecto[categoriaIdFromSub] || "";
-								if (["Tecnología", "Ropa", "Servicios"].includes(nombreCategoria)) {
+								if (["Tecnología", "Ropa", "Servicios", "Deportes"].includes(nombreCategoria)) {
 									setTitulo(`${nombreCategoria} - ${nombreSub}`);
 								} else {
 									setTitulo(`${nombreCategoria} ${nombreSub}`);

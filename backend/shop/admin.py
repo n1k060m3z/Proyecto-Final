@@ -1,8 +1,10 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Categoria
+from .models import Categoria, Subcategoria
+
 admin.site.register(Categoria)
+admin.site.register(Subcategoria)
 from .models import Producto, Usuario, CarritoItem, Carrito, Pedido, PedidoItem
 
 class ProductoAdmin(admin.ModelAdmin):
