@@ -14,6 +14,9 @@ import Footer from './components/Footer';
 import './App.css';
 import CatBar from './components/cat';
 import Busqueda from './pages/Busqueda';
+import Perfil from './pages/Perfil';
+import Configuracion from './pages/Configuracion';
+import Publicaciones from './pages/Publicaciones';
 
 function App() {
   // Estado global reactivo
@@ -61,10 +64,18 @@ function App() {
                 isAuthenticated && esVendedor ? <ProductForm /> : <Navigate to="/" replace />
               }
             />
+            {/* Página de publicaciones para vendedores */}
+            <Route
+              path="/publicaciones"
+              element={isAuthenticated && esVendedor ? <Publicaciones /> : <Navigate to="/" replace />}
+            />
             {/* Rutas de búsqueda */}
             <Route path="/buscar" element={<Busqueda />} />
             <Route path="/buscar/:categoriaId" element={<Busqueda />} />
             <Route path="/buscar/:categoriaId/:subcategoriaId" element={<Busqueda />} />
+            {/* Perfil y configuración */}
+            <Route path="/perfil" element={isAuthenticated ? <Perfil /> : <Navigate to="/iniciar-sesion" replace />} />
+            <Route path="/configuracion" element={isAuthenticated ? <Configuracion /> : <Navigate to="/iniciar-sesion" replace />} />
             {/* Ruta fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

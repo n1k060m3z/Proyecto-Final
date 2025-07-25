@@ -189,3 +189,51 @@ class CambiarRolUsuarioView(APIView):
             'message': 'Rol actualizado correctamente.',
             'es_vendedor': request.user.es_vendedor
         }, status=status.HTTP_200_OK)
+
+# --- Vista para obtener y actualizar el perfil del usuario autenticado ---
+class PerfilUsuarioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UsuarioSerializer(request.user)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        user = request.user
+        data = request.data.copy()
+        password_actual = data.pop('password_actual', None)
+        nueva_password = data.get('password', None)
+        # Si se va a cambiar el password, verificar el actual
+        if nueva_password:
+            if not password_actual or not user.check_password(password_actual):
+                return Response({'error': 'Contraseña actual incorrecta'}, status=status.HTTP_400_BAD_REQUEST)
+            user.set_password(nueva_password)
+            user.save()
+            data.pop('password', None)
+        # Si solo se cambian otros datos, también pedir password_actual
+        if ('username' in data or 'email' in data) and not user.check_password(password_actual):
+            return Response({'error': 'Contraseña actual incorrecta'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = UsuarioSerializer(user, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# --- Endpoint para verificar password actual (solo para seguridad) ---
+from rest_framework.views import APIView
+class VerificarPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        password_actual = request.data.get('password_actual')
+        if not password_actual or not request.user.check_password(password_actual):
+            return Response({'error': 'Contraseña incorrecta'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'ok': True})
+
+# --- Vista para listar productos del usuario autenticado (vendedor) ---
+class MisPublicacionesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        productos = Producto.objects.filter(vendedor=request.user)
+        serializer = ProductoSerializer(productos, many=True)
+        return Response(serializer.data)

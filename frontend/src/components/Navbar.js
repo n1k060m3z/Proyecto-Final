@@ -74,6 +74,14 @@ export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated
                 >
                   Mi perfil
                 </Link>
+                {esVendedor && (
+                  <Link
+                    to="/publicaciones"
+                    onClick={() => setMenuAbierto(false)}
+                  >
+                    Mis publicaciones
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                 >

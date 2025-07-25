@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../api/axios';
 import { useParams, useLocation } from "react-router-dom";
 import "../style/busqueda.css";
 import CatBar from '../components/cat';
 
-// ...existing code...
 // El conteo de categorías será dinámico
 
 const categoriaNombresPorDefecto = {
@@ -42,7 +41,7 @@ const filtrosEjemplo = {
 
 	useEffect(() => {
 		let url = "http://localhost:8000/api/productos/";
-		axios
+		api
 			.get(url)
 			.then((res) => {
 				let productosFiltrados = res.data;
@@ -86,7 +85,7 @@ const filtrosEjemplo = {
 
 	useEffect(() => {
 		// Obtener categorías y conteo de productos dinámicamente
-		axios.get("http://localhost:8000/api/categorias/")
+		api.get("http://localhost:8000/api/categorias/")
 			.then((res) => {
 				const categorias = res.data;
 				if (!Array.isArray(categorias)) {
@@ -97,7 +96,7 @@ const filtrosEjemplo = {
 					categorias.map(async (cat) => {
 						let count = 0;
 						try {
-							const prodRes = await axios.get(`http://localhost:8000/api/productos/categoria/${cat.id}/`);
+							const prodRes = await api.get(`http://localhost:8000/api/productos/categoria/${cat.id}/`);
 							// Si la respuesta es un array, filtra los productos que realmente tienen la categoría
 							if (Array.isArray(prodRes.data)) {
 								count = prodRes.data.filter(p => {
@@ -123,13 +122,13 @@ const filtrosEjemplo = {
 
 	useEffect(() => {
 		if (subcategoriaId) {
-			axios
+			api
 				.get(`http://localhost:8000/api/subcategorias/${subcategoriaId}/`)
 				.then((res) => {
 					const nombreSub = res.data.nombre;
 					const categoriaIdFromSub = res.data.categoria || categoriaId;
 					if (categoriaIdFromSub) {
-						axios
+						api
 							.get(`http://localhost:8000/api/categorias/${categoriaIdFromSub}/`)
 							.then((catRes) => {
 								const nombreCategoria = catRes.data.nombre || categoriaNombresPorDefecto[categoriaIdFromSub] || "";
@@ -148,7 +147,7 @@ const filtrosEjemplo = {
 				})
 				.catch(() => {
 					if (categoriaId) {
-						axios
+						api
 							.get(`http://localhost:8000/api/categorias/${categoriaId}/`)
 							.then((catRes) => setTitulo(catRes.data.nombre))
 							.catch(() => {
@@ -160,7 +159,7 @@ const filtrosEjemplo = {
 					}
 				});
 		} else if (categoriaId) {
-			axios
+			api
 				.get(`http://localhost:8000/api/categorias/${categoriaId}/`)
 				.then((res) => setTitulo(res.data.nombre))
 				.catch(() => {

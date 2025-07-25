@@ -13,6 +13,9 @@ from .views import (
     SubcategoriaDetailView,
     CategoriaDetailView,
     CambiarRolUsuarioView,
+    PerfilUsuarioView,
+    VerificarPasswordView,
+    MisPublicacionesView,  # <--- agregar
 )
 
 urlpatterns = [
@@ -40,4 +43,11 @@ urlpatterns = [
 
     # Cambiar rol de usuario
     path('usuario/cambiar-rol/', CambiarRolUsuarioView.as_view(), name='cambiar_rol_usuario'),
+
+    # Perfil de usuario
+    path('perfil/', PerfilUsuarioView.as_view(), name='perfil_usuario'),
+    path('perfil/verificar-password/', VerificarPasswordView.as_view(), name='verificar_password'),
+
+    # Publicaciones del vendedor
+    path('mis-publicaciones/', MisPublicacionesView.as_view(), name='mis_publicaciones'),
 ]
