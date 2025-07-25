@@ -24,6 +24,7 @@ class ProductoSerializer(serializers.ModelSerializer):
     categoria_id = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.all(), source='categoria', write_only=True, required=False
     )
+    vendedor = serializers.PrimaryKeyRelatedField(read_only=True)
     # Mantén el campo imagen como está para que DRF lo serialice como string
 
     class Meta:
