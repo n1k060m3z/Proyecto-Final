@@ -1,3 +1,16 @@
+# --- Vista para obtener el detalle de un producto por ID ---
+from rest_framework import generics
+
+# --- Vista para obtener el detalle de un producto por ID ---
+
+# --- Vista para obtener el detalle de un producto por ID ---
+from rest_framework.permissions import AllowAny
+from .models import Producto
+from .serializers import ProductoSerializer
+class ProductoDetailView(generics.RetrieveAPIView):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializer
+    permission_classes = [AllowAny]
 from rest_framework import status, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response

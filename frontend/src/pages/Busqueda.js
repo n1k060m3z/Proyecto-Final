@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from '../api/axios';
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import "../style/busqueda.css";
 import CatBar from '../components/cat';
 
@@ -252,24 +252,31 @@ const q = params.get('q');
 						</select>
 					</div>
 					{productos.map((producto) => (
-						<div key={producto.id} className="producto-card">
-							<img
-								src={producto.imagen}
-								alt={producto.nombre}
-								className="producto-img"
-							/>
-							<div className="producto-info">
-								<div className="producto-nombre">{producto.nombre}</div>
-								<div className="producto-precio">
-									{producto.precio
-										? `$ ${Math.floor(producto.precio).toLocaleString()}`
-										: "Precio a convenir"}
-								</div>
-								<div className="producto-ciudad">
-									{producto.ciudad || ""}
+						<Link
+							key={producto.id}
+							to={`/producto/${producto.id}`}
+							className="producto-link-wrapper"
+							style={{ textDecoration: 'none', color: 'inherit' }}
+						>
+							<div className="producto-card">
+								<img
+									src={producto.imagen}
+									alt={producto.nombre}
+									className="producto-img"
+								/>
+								<div className="producto-info">
+									<div className="producto-nombre">{producto.nombre}</div>
+									<div className="producto-precio">
+										{producto.precio
+											? `$ ${Math.floor(producto.precio).toLocaleString()}`
+											: "Precio a convenir"}
+									</div>
+									<div className="producto-ciudad">
+										{producto.ciudad || ""}
+									</div>
 								</div>
 							</div>
-						</div>
+						</Link>
 					))}
 				</main>
 			</div>
