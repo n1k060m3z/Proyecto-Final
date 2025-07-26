@@ -83,9 +83,9 @@ const CatBar = () => {
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg relative z-10">
+    <div className="w-full bg-gradient-to-r from-blue-600 to-blue-700 shadow-md relative z-10">
       <div className="container mx-auto px-4">
-        <div className="flex items-center space-x-1 py-3 overflow-x-auto scrollbar-hide">
+        <div className="flex justify-center items-center space-x-2 py-2 overflow-x-auto scrollbar-hide">
           {categorias.map((cat) => (
             <div
               key={cat.id}
@@ -94,9 +94,9 @@ const CatBar = () => {
             >
               <button
                 className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 whitespace-nowrap
+                  flex items-center justify-center gap-2 px-5 py-2 rounded-full font-semibold text-2xl transition-all duration-200 whitespace-nowrap
                   ${hovered === cat.id 
-                    ? 'bg-white text-blue-600 shadow-md transform scale-105' 
+                    ? 'bg-white text-blue-600 shadow-md scale-105' 
                     : 'text-white hover:bg-blue-500 hover:bg-opacity-30'
                   }
                 `}
@@ -107,14 +107,14 @@ const CatBar = () => {
                 {cat.nombre}
                 {cat.subcategorias && cat.subcategorias.length > 0 && (
                   <ChevronDown 
-                    size={16} 
+                    size={18} 
                     className={`transition-transform duration-200 ${
                       activeDropdown === cat.id ? 'rotate-180' : ''
                     }`}
                   />
                 )}
               </button>
-              
+
               {activeDropdown === cat.id && cat.subcategorias && cat.subcategorias.length > 0 && (
                 <div
                   className="fixed bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[1000] animate-in fade-in slide-in-from-top-2 duration-200 min-w-48"
@@ -142,7 +142,7 @@ const CatBar = () => {
           ))}
         </div>
       </div>
-      
+
       <style jsx>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
@@ -151,17 +151,17 @@ const CatBar = () => {
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
-        
+
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        
+
         @keyframes slide-in-from-top-2 {
           from { transform: translateY(-8px); }
           to { transform: translateY(0); }
         }
-        
+
         .animate-in {
           animation: fade-in 0.2s ease-out, slide-in-from-top-2 0.2s ease-out;
         }
@@ -171,4 +171,5 @@ const CatBar = () => {
 };
 
 export default CatBar;
+
 

@@ -68,7 +68,7 @@ function Home() {
     },
     {
       nombre: 'Videojuegos',
-      img: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=400&q=80',
+      img: 'https://fd.ort.edu.uy/innovaportal/file/154809/1/ps5-xbox-nintendo-consolas-nuevas-historia-de-videojuegos-universidad-ort-uruguay.jpg',
       ruta: '/buscar/videojuegos',
     },
   ];
