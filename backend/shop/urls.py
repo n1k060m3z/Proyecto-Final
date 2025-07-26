@@ -15,8 +15,7 @@ from .views import (
     CambiarRolUsuarioView,
     PerfilUsuarioView,
     VerificarPasswordView,
-    MisPublicacionesView,
-    ProductoDetailView,  # <--- agregar
+    MisPublicacionesView,  # <--- agregar
 )
 
 urlpatterns = [
@@ -24,7 +23,6 @@ urlpatterns = [
     path('productos/', ProductoListView.as_view(), name='listar_productos'),
     path('productos/crear/', ProductoCreateView.as_view(), name='crear_producto'),
     path('productos/categoria/<int:categoria_id>/', ProductosPorCategoriaView.as_view(), name='productos_por_categoria'),
-    path('productos/<int:pk>/', ProductoDetailView.as_view(), name='detalle_producto'),
 
     # Autenticación y registro
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

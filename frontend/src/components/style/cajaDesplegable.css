@@ -1,0 +1,38 @@
+/* CajaDesplegable: caja blanca con borde azul, expandible */
+.caja-desplegable {
+  background: #fff;
+  border: 2px solid #2563eb;
+  border-radius: 10px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 8px #2563eb11;
+  transition: box-shadow 0.2s;
+}
+.caja-desplegable.abierta {
+  box-shadow: 0 4px 16px #2563eb22;
+}
+.caja-desplegable-titulo {
+  cursor: pointer;
+  font-weight: 600;
+  color: #2563eb;
+  font-size: 1.13rem;
+  padding: 16px 18px 12px 18px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+.caja-desplegable-flecha {
+  font-size: 1.1em;
+  margin-right: 10px;
+  transition: transform 0.2s;
+}
+.caja-desplegable-flecha.abierta {
+  transform: rotate(0deg);
+}
+.caja-desplegable-contenido {
+  padding: 0 18px 18px 18px;
+  animation: fadeIn 0.2s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

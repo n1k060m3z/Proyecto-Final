@@ -17,7 +17,6 @@ import Busqueda from './pages/Busqueda';
 import Perfil from './pages/Perfil';
 import Configuracion from './pages/Configuracion';
 import Publicaciones from './pages/Publicaciones';
-import ProductoDetalle from './pages/ProductoDetalle';
 
 function App() {
   // Estado global reactivo
@@ -70,6 +69,7 @@ function App() {
               path="/publicaciones"
               element={isAuthenticated && esVendedor ? <Publicaciones /> : <Navigate to="/" replace />}
             />
+            <Route path="/editar-publicacion/:id" element={<EditarPublicacion />} />
             {/* Rutas de búsqueda */}
             <Route path="/buscar" element={<Busqueda />} />
             <Route path="/buscar/:categoriaId" element={<Busqueda />} />
