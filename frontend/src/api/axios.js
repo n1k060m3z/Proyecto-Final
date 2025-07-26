@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-// Crear una instancia global de axios
-const api = axios.create();
+// Crear una instancia global de axios con baseURL
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api/',
+});
 
 // Interceptor de respuestas para manejar expiración de token
 api.interceptors.response.use(

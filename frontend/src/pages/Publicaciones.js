@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axios';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 const acciones = [
   { label: 'Modificar', value: 'modificar' },
   { label: 'Gestionar precios', value: 'precios' },
   { label: 'Ir a la página de producto', value: 'ver' },
-  { label: 'Aumentar exposición', value: 'exposicion' },
   { label: 'Analizar rendimiento', value: 'rendimiento' },
   { label: 'Necesito ayuda', value: 'ayuda' },
 ];
@@ -15,6 +16,7 @@ const Publicaciones = () => {
   const [seleccionados, setSeleccionados] = useState([]);
   const [menuAccion, setMenuAccion] = useState(null);
   const [anchorMenu, setAnchorMenu] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get('http://localhost:8000/api/mis-publicaciones/', {
@@ -34,29 +36,48 @@ const Publicaciones = () => {
   };
 
   // --- Acciones funcionales ---
-  const pausarSeleccionados = async () => {
-    for (const id of seleccionados) {
-      await api.patch(`http://localhost:8000/api/productos/${id}/`, { activo: false }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+  const pausarSeleccionados = async (ids = seleccionados) => {
+    if (ids.length === 0) return;
+    try {
+      for (const id of ids) {
+        await api.patch(`productos/${id}/`, { activo: false }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      }
+      toast.success('Publicación(es) pausada(s)');
+      recargarProductos();
+    } catch {
+      toast.error('Error al pausar publicaciones');
     }
-    recargarProductos();
   };
-  const reactivarSeleccionados = async () => {
-    for (const id of seleccionados) {
-      await api.patch(`http://localhost:8000/api/productos/${id}/`, { activo: true }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+  const reactivarSeleccionados = async (ids = seleccionados) => {
+    if (ids.length === 0) return;
+    try {
+      for (const id of ids) {
+        await api.patch(`productos/${id}/`, { activo: true }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      }
+      toast.success('Publicación(es) reactivada(s)');
+      recargarProductos();
+    } catch {
+      toast.error('Error al reactivar publicaciones');
     }
-    recargarProductos();
   };
-  const eliminarSeleccionados = async () => {
-    for (const id of seleccionados) {
-      await api.delete(`http://localhost:8000/api/productos/${id}/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+  const eliminarSeleccionados = async (ids = seleccionados) => {
+    if (ids.length === 0) return;
+    if (!window.confirm('¿Estás seguro de eliminar las publicaciones seleccionadas?')) return;
+    try {
+      for (const id of ids) {
+        await api.delete(`productos/${id}/`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      }
+      toast.success('Publicación(es) eliminada(s)');
+      recargarProductos();
+    } catch {
+      toast.error('Error al eliminar publicaciones');
     }
-    recargarProductos();
   };
   const recargarProductos = () => {
     api.get('http://localhost:8000/api/mis-publicaciones/', {
@@ -81,7 +102,10 @@ const Publicaciones = () => {
       reactivarSeleccionados([producto.id]);
       return;
     }
-    // Aquí puedes implementar cada acción según el valor
+    if (accion === 'Modificar' || accion === 'Gestionar precios') {
+      navigate(`/editar-publicacion/${producto.id}`);
+      return;
+    }
     alert(`Acción: ${accion} sobre producto ${producto.nombre}`);
   };
 

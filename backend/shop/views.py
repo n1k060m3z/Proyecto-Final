@@ -250,3 +250,11 @@ class MisPublicacionesView(APIView):
         productos = Producto.objects.filter(vendedor=request.user)
         serializer = ProductoSerializer(productos, many=True)
         return Response(serializer.data)
+
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
+
+# --- Vista para obtener, actualizar y eliminar un producto por ID (detalle) ---
+class ProductoRetrieveUpdateView(RetrieveUpdateDestroyAPIView):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializer
+    permission_classes = [IsAuthenticated]
