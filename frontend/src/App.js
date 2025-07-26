@@ -17,6 +17,8 @@ import Busqueda from './pages/Busqueda';
 import Perfil from './pages/Perfil';
 import Configuracion from './pages/Configuracion';
 import Publicaciones from './pages/Publicaciones';
+import EditarPublicacion from './pages/EditarPublicacion'; // Importación añadida
+import ProductoDetalle from './pages/ProductoDetalle'; // Asegúrate de importar ProductoDetalle si no está importado
 
 function App() {
   // Estado global reactivo
