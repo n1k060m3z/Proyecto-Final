@@ -14,6 +14,7 @@ const categoriaNombresPorDefecto = {
 	5: "Deportes",
 	6: "Libros",
 	7: "Videojuegos",
+	8: "Ofertas",
 	// Agrega aquí los IDs y nombres de tus categorías principales
 };
 
@@ -47,13 +48,21 @@ const filtrosEjemplo = {
 			url = `http://localhost:8000/api/productos/subcategoria/${subcategoriaId}/`;
 		} else if (categoriaId && oferta === '1') {
 			url = `http://localhost:8000/api/productos/ofertas/categoria/${categoriaId}/`;
+		} else if (categoriaId === '8' || categoriaId === 8) {
+			// Si la categoría es Ofertas, traer todos los productos y filtrar en_oferta en el frontend
+			url = `http://localhost:8000/api/productos/`;
 		} else if (categoriaId) {
 			url = `http://localhost:8000/api/productos/categoria/${categoriaId}/`;
 		}
+		console.log('URL productos:', url, 'categoriaId:', categoriaId, 'subcategoriaId:', subcategoriaId);
 		api
 			.get(url)
 			.then((res) => {
 				let productosFiltrados = res.data;
+				// Si la categoría es Ofertas, filtrar en_oferta en el frontend
+				if (categoriaId === '8' || categoriaId === 8) {
+					productosFiltrados = productosFiltrados.filter(p => p.en_oferta);
+				}
 				// Si hay búsqueda, filtrar solo por el query
 				const q = params.get('q');
 				if (q) {
@@ -70,7 +79,9 @@ const filtrosEjemplo = {
 				});
 				setProductos(productosFiltrados);
 			})
-			.catch(() => setProductos([]));
+			.catch((err) => {
+				setProductos([]);
+			});
 	}, [categoriaId, subcategoriaId, location.search]);
 
 	useEffect(() => {
@@ -172,7 +183,7 @@ const filtrosEjemplo = {
 		} else {
 			setTitulo("Hogar y Oficina");
 		}
-	}, [categoriaId, subcategoriaId]);
+  }, [categoriaId, subcategoriaId]);
 
 	const handleOrdenChange = (e) => {
 		const value = e.target.value;
