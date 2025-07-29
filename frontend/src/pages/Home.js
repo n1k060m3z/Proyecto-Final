@@ -5,6 +5,7 @@ import CatBar from '../components/cat';
 
 function Home() {
   const navigate = useNavigate();
+
   // Accesos directos como en cap1
   const categoriasAcceso = [
     {
@@ -34,43 +35,16 @@ function Home() {
     },
   ];
 
-  // Ofertas por categoría: Tecnología, Ropa, Servicios, Hogar, Deportes, Libros, Videojuegos
+  // Ofertas por categoría: todos los botones redirigen a la categoría 'Ofertas' (id real)
+  const idOfertas = 8; // Asegúrate que este es el id real de la categoría Ofertas
   const ofertasCategorias = [
-    {
-      nombre: 'Tecnología',
-      img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
-      ruta: '/buscar/tecnologia',
-    },
-    {
-      nombre: 'Ropa',
-      img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80',
-      ruta: '/buscar/ropa',
-    },
-    {
-      nombre: 'Servicios',
-      img: 'https://www.albaniles.org/wp-content/uploads/2016/08/plomero1.jpg',
-      ruta: '/buscar/servicios',
-    },
-    {
-      nombre: 'Hogar',
-      img: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80',
-      ruta: '/buscar/hogar',
-    },
-    {
-      nombre: 'Deportes',
-      img: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=400&q=80',
-      ruta: '/buscar/deportes',
-    },
-    {
-      nombre: 'Libros',
-      img: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80',
-      ruta: '/buscar/libros',
-    },
-    {
-      nombre: 'Videojuegos',
-      img: 'https://fd.ort.edu.uy/innovaportal/file/154809/1/ps5-xbox-nintendo-consolas-nuevas-historia-de-videojuegos-universidad-ort-uruguay.jpg',
-      ruta: '/buscar/videojuegos',
-    },
+    { nombre: 'Tecnología', img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80' },
+    { nombre: 'Ropa', img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80' },
+    { nombre: 'Servicios', img: 'https://www.albaniles.org/wp-content/uploads/2016/08/plomero1.jpg' },
+    { nombre: 'Hogar', img: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80' },
+    { nombre: 'Deportes', img: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=400&q=80' },
+    { nombre: 'Libros', img: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80' },
+    { nombre: 'Videojuegos', img: 'https://fd.ort.edu.uy/innovaportal/file/154809/1/ps5-xbox-nintendo-consolas-nuevas-historia-de-videojuegos-universidad-ort-uruguay.jpg' },
   ];
 
   return (
@@ -104,7 +78,7 @@ function Home() {
           <div
             key={cat.nombre}
             className="oferta-cat-card"
-            onClick={() => navigate(cat.ruta)}
+            onClick={() => navigate(`/buscar/${idOfertas}?oferta=1`)}
           >
             <img src={cat.img} alt={cat.nombre} />
             <span>{cat.nombre}</span>

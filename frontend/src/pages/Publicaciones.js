@@ -141,6 +141,42 @@ const Publicaciones = () => {
               <div style={{ fontWeight: 600 }}>{producto.nombre}</div>
               <div style={{ color: '#888', fontSize: 14 }}>{producto.descripcion}</div>
               <div style={{ color: '#2563eb', fontWeight: 500, fontSize: 15, marginTop: 4 }}>${producto.precio}</div>
+              <div style={{ marginTop: 8 }}>
+                <label style={{ marginRight: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={producto.en_oferta}
+                    onChange={async e => {
+                      await api.patch(`productos/${producto.id}/`, { en_oferta: e.target.checked }, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                      });
+                      recargarProductos();
+                    }}
+                  />{' '}
+                  En oferta
+                </label>
+                {producto.en_oferta && (
+                  <label style={{ marginLeft: 16 }}>
+                    Descuento (%):
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={producto.descuento}
+                      style={{ width: 60, marginLeft: 8 }}
+                      onChange={async e => {
+                        let val = parseInt(e.target.value, 10);
+                        if (isNaN(val) || val < 0) val = 0;
+                        if (val > 100) val = 100;
+                        await api.patch(`productos/${producto.id}/`, { descuento: val }, {
+                          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                        });
+                        recargarProductos();
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
             <div style={{ marginRight: 18 }}>
               <span style={{ background: '#ffe600', color: '#222', fontWeight: 700, fontSize: 13, borderRadius: 4, padding: '2px 8px' }}>ML</span>

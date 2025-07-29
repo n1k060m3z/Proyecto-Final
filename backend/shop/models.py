@@ -36,6 +36,8 @@ class Producto(models.Model):
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     categoria = models.ForeignKey('Categoria', on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
     subcategoria = models.ForeignKey('Subcategoria', on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
+    en_oferta = models.BooleanField(default=False)  # Cambia el valor por defecto a False
+    descuento = models.PositiveIntegerField(default=0, help_text='Porcentaje de descuento (0-100)')
 
     def __str__(self):
         return self.nombre

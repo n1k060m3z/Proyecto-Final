@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Producto, Usuario, CarritoItem, Categoria, Subcategoria
@@ -25,11 +26,25 @@ class ProductoSerializer(serializers.ModelSerializer):
         queryset=Categoria.objects.all(), source='categoria', write_only=True, required=False
     )
     vendedor = serializers.PrimaryKeyRelatedField(read_only=True)
-    # Mantén el campo imagen como está para que DRF lo serialice como string
+    precio_con_descuento = serializers.SerializerMethodField()
 
     class Meta:
         model = Producto
-        fields = '__all__'
+        fields = [
+            'id', 'vendedor', 'nombre', 'descripcion', 'precio', 'imagen',
+            'categoria', 'categoria_id', 'subcategoria', 'en_oferta', 'descuento',
+            'precio_con_descuento', 'subcategoria_id'
+        ]
+
+    def get_precio_con_descuento(self, obj):
+        if obj.en_oferta and obj.descuento > 0:
+            return float(obj.precio) * (1 - obj.descuento / 100)
+        return float(obj.precio)
+
+    def update(self, instance, validated_data):
+        # Eliminar la lógica de cambio de categoría al activar/desactivar oferta
+        # Solo se actualizan los campos normales
+        return super().update(instance, validated_data)
 
 
 # --- Serializer para Items del Carrito ---

@@ -41,43 +41,33 @@ const filtrosEjemplo = {
 
 	useEffect(() => {
 		let url = "http://localhost:8000/api/productos/";
+		const params = new URLSearchParams(location.search);
+		const oferta = params.get('oferta');
+		if (subcategoriaId) {
+			url = `http://localhost:8000/api/productos/subcategoria/${subcategoriaId}/`;
+		} else if (categoriaId && oferta === '1') {
+			url = `http://localhost:8000/api/productos/ofertas/categoria/${categoriaId}/`;
+		} else if (categoriaId) {
+			url = `http://localhost:8000/api/productos/categoria/${categoriaId}/`;
+		}
 		api
 			.get(url)
 			.then((res) => {
 				let productosFiltrados = res.data;
 				// Si hay búsqueda, filtrar solo por el query
-				const params = new URLSearchParams(location.search);
 				const q = params.get('q');
 				if (q) {
 					productosFiltrados = productosFiltrados.filter(p =>
 						p.nombre && p.nombre.toLowerCase().includes(q.toLowerCase())
 					);
-				} else {
-					// Si no hay búsqueda, filtrar por categoría/subcategoría
-					if (subcategoriaId) {
-						productosFiltrados = productosFiltrados.filter(p => {
-							if (p.subcategoria && typeof p.subcategoria === 'object' && 'id' in p.subcategoria) {
-								return p.subcategoria.id == subcategoriaId;
-							}
-							return p.subcategoria == subcategoriaId;
-						});
-					} else if (categoriaId) {
-						productosFiltrados = productosFiltrados.filter(p => {
-							if (p.categoria && typeof p.categoria === 'object' && 'id' in p.categoria) {
-								return p.categoria.id == categoriaId;
-							}
-							return p.categoria == categoriaId;
-						});
-					}
 				}
-
 				// Normalizar la URL de imagen para asegurar que siempre sea absoluta
-			   productosFiltrados = productosFiltrados.map(p => {
-				   if (p.imagen && p.imagen.startsWith('/media/productos/')) {
-					   p.imagen = `http://localhost:8000${p.imagen}`;
-				   }
-				   return p;
-			   });
+				productosFiltrados = productosFiltrados.map(p => {
+					if (p.imagen && p.imagen.startsWith('/media/productos/')) {
+						p.imagen = `http://localhost:8000${p.imagen}`;
+					}
+					return p;
+				});
 				setProductos(productosFiltrados);
 			})
 			.catch(() => setProductos([]));
@@ -267,9 +257,23 @@ const q = params.get('q');
 								<div className="producto-info">
 									<div className="producto-nombre">{producto.nombre}</div>
 									<div className="producto-precio">
-										{producto.precio
-											? `$ ${Math.floor(producto.precio).toLocaleString()}`
-											: "Precio a convenir"}
+										{producto.en_oferta && producto.descuento > 0 ? (
+											<>
+												<span style={{ color: '#e53935', fontWeight: 700 }}>
+													$ {Math.floor(producto.precio_con_descuento).toLocaleString()}
+												</span>
+												<span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
+													$ {Math.floor(producto.precio).toLocaleString()}
+												</span>
+												<span style={{ color: '#388e3c', marginLeft: 8 }}>
+													-{producto.descuento}%
+												</span>
+											</>
+										) : (
+											producto.precio
+												? `$ ${Math.floor(producto.precio).toLocaleString()}`
+												: "Precio a convenir"
+										)}
 									</div>
 									<div className="producto-ciudad">
 										{producto.ciudad || ""}

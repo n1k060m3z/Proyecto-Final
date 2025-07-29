@@ -9,6 +9,7 @@ from .views import (
     CarritoDeleteView,
     PedidoCreateView,
     ProductosPorCategoriaView,
+    ProductosPorSubcategoriaView,  # <-- nueva vista
     CategoriaListView,
     SubcategoriaDetailView,
     CategoriaDetailView,
@@ -17,6 +18,7 @@ from .views import (
     VerificarPasswordView,
     MisPublicacionesView,
     ProductoRetrieveUpdateView,  # <--- agregar
+    ProductosEnOfertaPorCategoriaView,  # <-- nueva vista para ofertas
 )
 
 urlpatterns = [
@@ -24,7 +26,9 @@ urlpatterns = [
     path('productos/', ProductoListView.as_view(), name='listar_productos'),
     path('productos/crear/', ProductoCreateView.as_view(), name='crear_producto'),
     path('productos/categoria/<int:categoria_id>/', ProductosPorCategoriaView.as_view(), name='productos_por_categoria'),
+    path('productos/subcategoria/<int:subcategoria_id>/', ProductosPorSubcategoriaView.as_view(), name='productos_por_subcategoria'),  # <-- nuevo endpoint
     path('productos/<int:pk>/', ProductoRetrieveUpdateView.as_view(), name='detalle_producto'),  # <--- agregar
+    path('productos/ofertas/categoria/<int:categoria_id>/', ProductosEnOfertaPorCategoriaView.as_view(), name='productos_en_oferta_por_categoria'),  # <-- nuevo endpoint
 
     # Autenticación y registro
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

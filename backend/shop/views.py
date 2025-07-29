@@ -180,6 +180,7 @@ class ProductosPorCategoriaView(generics.ListAPIView):
 
     def get_queryset(self):
         categoria_id = self.kwargs.get('categoria_id')
+        # Solo productos que realmente tienen la categoría asignada
         return Producto.objects.filter(categoria_id=categoria_id)
 
 # --- Vista para listar categorías ---
@@ -258,3 +259,27 @@ class ProductoRetrieveUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
     permission_classes = [IsAuthenticated]
+
+# --- Vista para listar productos por subcategoría ---
+class ProductosPorSubcategoriaView(generics.ListAPIView):
+    serializer_class = ProductoSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        subcategoria_id = self.kwargs.get('subcategoria_id')
+        # Solo productos que realmente tienen la subcategoría asignada
+        return Producto.objects.filter(subcategoria_id=subcategoria_id)
+
+# --- Vista para listar productos en oferta por categoría ---
+class ProductosEnOfertaPorCategoriaView(generics.ListAPIView):
+    serializer_class = ProductoSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        categoria_id = self.kwargs.get('categoria_id')
+        # Mostrar productos en oferta de cualquier categoría si categoria_id es la de "Ofertas"
+        categoria_ofertas = Categoria.objects.filter(nombre__iexact='Ofertas').first()
+        if categoria_ofertas and str(categoria_id) == str(categoria_ofertas.id):
+            return Producto.objects.filter(en_oferta=True)
+        # Si no, mostrar solo los productos en oferta de la categoría seleccionada
+        return Producto.objects.filter(categoria_id=categoria_id, en_oferta=True)
