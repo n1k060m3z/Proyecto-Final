@@ -27,13 +27,14 @@ class ProductoSerializer(serializers.ModelSerializer):
     )
     vendedor = serializers.PrimaryKeyRelatedField(read_only=True)
     precio_con_descuento = serializers.SerializerMethodField()
+    activo = serializers.BooleanField(default=True)  # <-- Agregado campo activo
 
     class Meta:
         model = Producto
         fields = [
             'id', 'vendedor', 'nombre', 'descripcion', 'precio', 'imagen',
             'categoria', 'categoria_id', 'subcategoria', 'en_oferta', 'descuento',
-            'precio_con_descuento', 'subcategoria_id'
+            'precio_con_descuento', 'subcategoria_id', 'activo'  # <-- Agregado campo activo
         ]
 
     def get_precio_con_descuento(self, obj):
