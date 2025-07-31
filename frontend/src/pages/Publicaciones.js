@@ -36,47 +36,56 @@ const Publicaciones = () => {
   };
 
   // --- Acciones funcionales ---
-  const pausarSeleccionados = async (ids = seleccionados) => {
-    if (ids.length === 0) return;
+  const pausarSeleccionados = async (idsParam) => {
+    const ids = Array.isArray(idsParam) ? idsParam : seleccionados;
+    if (!Array.isArray(ids) || ids.length === 0) return;
     try {
       for (const id of ids) {
-        await api.patch(`productos/${id}/`, { activo: false }, {
+        const res = await api.patch(`productos/${id}/`, { activo: false }, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        console.log('PATCH response (pausar):', res);
       }
       toast.success('Publicación(es) pausada(s)');
       recargarProductos();
-    } catch {
-      toast.error('Error al pausar publicaciones');
+    } catch (err) {
+      console.error('Error al pausar:', err?.response || err);
+      toast.error('Error al pausar publicaciones: ' + (err?.response?.data?.detail || err?.message || ''));
     }
   };
-  const reactivarSeleccionados = async (ids = seleccionados) => {
-    if (ids.length === 0) return;
+  const reactivarSeleccionados = async (idsParam) => {
+    const ids = Array.isArray(idsParam) ? idsParam : seleccionados;
+    if (!Array.isArray(ids) || ids.length === 0) return;
     try {
       for (const id of ids) {
-        await api.patch(`productos/${id}/`, { activo: true }, {
+        const res = await api.patch(`productos/${id}/`, { activo: true }, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        console.log('PATCH response (reactivar):', res);
       }
       toast.success('Publicación(es) reactivada(s)');
       recargarProductos();
-    } catch {
-      toast.error('Error al reactivar publicaciones');
+    } catch (err) {
+      console.error('Error al reactivar:', err?.response || err);
+      toast.error('Error al reactivar publicaciones: ' + (err?.response?.data?.detail || err?.message || ''));
     }
   };
-  const eliminarSeleccionados = async (ids = seleccionados) => {
-    if (ids.length === 0) return;
+  const eliminarSeleccionados = async (idsParam) => {
+    const ids = Array.isArray(idsParam) ? idsParam : seleccionados;
+    if (!Array.isArray(ids) || ids.length === 0) return;
     if (!window.confirm('¿Estás seguro de eliminar las publicaciones seleccionadas?')) return;
     try {
       for (const id of ids) {
-        await api.delete(`productos/${id}/`, {
+        const res = await api.delete(`productos/${id}/`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
+        console.log('DELETE response:', res);
       }
       toast.success('Publicación(es) eliminada(s)');
       recargarProductos();
-    } catch {
-      toast.error('Error al eliminar publicaciones');
+    } catch (err) {
+      console.error('Error al eliminar:', err?.response || err);
+      toast.error('Error al eliminar publicaciones: ' + (err?.response?.data?.detail || err?.message || ''));
     }
   };
   const recargarProductos = () => {
@@ -177,6 +186,15 @@ const Publicaciones = () => {
                   </label>
                 )}
               </div>
+              {producto.activo ? (
+                <span style={{ color: '#388e3c', fontWeight: 600, marginLeft: 12 }}>
+                  ● Activo
+                </span>
+              ) : (
+                <span style={{ color: '#e53935', fontWeight: 600, marginLeft: 12 }}>
+                  ● Pausado
+                </span>
+              )}
             </div>
             <div style={{ marginRight: 18 }}>
               <span style={{ background: '#ffe600', color: '#222', fontWeight: 700, fontSize: 13, borderRadius: 4, padding: '2px 8px' }}>ML</span>
