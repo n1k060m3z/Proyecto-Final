@@ -2,45 +2,45 @@ import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import axios from "axios";
 import "./style/cat.css";
-
+ 
 const CatBar = () => {
   const [categorias, setCategorias] = useState([]);
   const [hovered, setHovered] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
-
+ 
   useEffect(() => {
     axios
       .get("http://localhost:8000/api/categorias/")
       .then((res) => setCategorias(res.data))
       .catch(() => setCategorias([]));
   }, []);
-
+ 
   const handleMouseEnter = (catId) => {
     setHovered(catId);
     setActiveDropdown(catId);
   };
-
+ 
   const handleMouseLeave = () => {
     setHovered(null);
     setTimeout(() => {
       setActiveDropdown(null);
     }, 150);
   };
-
+ 
   const handleDropdownMouseEnter = () => {
     setActiveDropdown(hovered);
   };
-
+ 
   const handleSubcategoryClick = (subcategoria, categoria) => {
     window.location.href = `/buscar/${categoria.id}/${subcategoria.id}`;
   };
-
+ 
   const handleMainCategoryClick = (categoria) => {
     if (!categoria.subcategorias || categoria.subcategorias.length === 0) {
       window.location.href = `/buscar/${categoria.id}`;
     }
   };
-
+ 
   return (
     <div className="w-full bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg relative z-10">
       <div className="container mx-auto px-4">
@@ -74,7 +74,7 @@ const CatBar = () => {
                   />
                 )}
               </button>
-
+ 
               {activeDropdown === cat.id &&
                 cat.subcategorias &&
                 cat.subcategorias.length > 0 && (
@@ -141,6 +141,8 @@ const CatBar = () => {
     </div>
   );
 };
-
+ 
 export default CatBar;
 // Eliminado el componente duplicado CategoriasBar.js para evitar duplicidad y problemas de consistencia.
+ 
+ 

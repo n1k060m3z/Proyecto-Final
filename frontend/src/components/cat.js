@@ -1,54 +1,16 @@
-/* import React, { useEffect, useState } from "react";
+// ...existing code...
+
+import React, { useEffect, useState, useRef } from "react";
+import { ChevronDown } from "lucide-react";
 import axios from "axios";
 import "./style/cat.css";
 
 const CatBar = () => {
   const [categorias, setCategorias] = useState([]);
   const [hovered, setHovered] = useState(null);
-
-  useEffect(() => {
-    axios.get("http://localhost:8000/api/categorias/")
-      .then(res => setCategorias(res.data))
-      .catch(() => setCategorias([]));
-  }, []);
-
-  return (
-    <div className="cat-bar">
-      {categorias.map((cat) => (
-        <div
-          key={cat.id}
-          className="cat-bar-dropdown"
-          onMouseEnter={() => setHovered(cat.id)}
-          onMouseLeave={() => setHovered(null)}
-        >
-          <button className="cat-bar-btn">
-            {cat.nombre}
-          </button>
-          {hovered === cat.id && cat.subcategorias && cat.subcategorias.length > 0 && (
-            <div className="cat-bar-submenu">
-              {cat.subcategorias.map((sub) => (
-                <button key={sub.id} className="cat-bar-sub-btn">
-                  {sub.nombre}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export default CatBar; */
-
-import React, { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
-import axios from "axios";
-
-const CatBar = () => {
-  const [categorias, setCategorias] = useState([]);
-  const [hovered, setHovered] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const btnRefs = useRef({});
 
   useEffect(() => {
     axios.get("http://localhost:8000/api/categorias/")
@@ -59,13 +21,28 @@ const CatBar = () => {
   const handleMouseEnter = (catId) => {
     setHovered(catId);
     setActiveDropdown(catId);
+    // Calcular posición del botón
+    const btn = btnRefs.current[catId];
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + window.scrollY + 6,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
   };
 
+  // Control para evitar que el menú desaparezca al mover rápido el mouse
+  const leaveTimeout = useRef();
   const handleMouseLeave = () => {
-    setHovered(null);
-    setTimeout(() => {
+    leaveTimeout.current = setTimeout(() => {
+      setHovered(null);
       setActiveDropdown(null);
-    }, 150);
+    }, 220);
+  };
+  const handleMouseEnterAny = () => {
+    if (leaveTimeout.current) clearTimeout(leaveTimeout.current);
   };
 
   const handleDropdownMouseEnter = () => {
@@ -83,89 +60,62 @@ const CatBar = () => {
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-blue-600 to-blue-700 shadow-md relative z-10">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-center items-center space-x-2 py-2 overflow-x-auto scrollbar-hide">
+    <div className="cat-bar-bg">
+      <div className="cat-bar-container">
+        <div className="cat-bar-scroll scrollbar-hide">
           {categorias.map((cat) => (
             <div
               key={cat.id}
-              className="relative flex-shrink-0"
+              className="cat-bar-dropdown"
               onMouseLeave={handleMouseLeave}
+              onMouseEnter={handleMouseEnterAny}
             >
               <button
-                className={`
-                  flex items-center justify-center gap-2 px-5 py-2 rounded-full font-semibold text-2xl transition-all duration-200 whitespace-nowrap
-                  ${hovered === cat.id 
-                    ? 'bg-white text-blue-600 shadow-md scale-105' 
-                    : 'text-white hover:bg-blue-500 hover:bg-opacity-30'
-                  }
-                `}
+                ref={el => btnRefs.current[cat.id] = el}
+                className={`cat-bar-btn${hovered === cat.id ? ' cat-bar-btn-active' : ''}`}
                 data-category-id={cat.id}
                 onMouseEnter={() => handleMouseEnter(cat.id)}
                 onClick={() => handleMainCategoryClick(cat)}
               >
                 {cat.nombre}
                 {cat.subcategorias && cat.subcategorias.length > 0 && (
-                  <ChevronDown 
-                    size={18} 
-                    className={`transition-transform duration-200 ${
-                      activeDropdown === cat.id ? 'rotate-180' : ''
-                    }`}
+                  <ChevronDown
+                    size={18}
+                    className={activeDropdown === cat.id ? 'cat-bar-chevron-rotated' : ''}
                   />
                 )}
               </button>
-
-              {activeDropdown === cat.id && cat.subcategorias && cat.subcategorias.length > 0 && (
-                <div
-                  className="fixed bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[1000] animate-in fade-in slide-in-from-top-2 duration-200 min-w-48"
-                  style={{
-                    top: `${document.querySelector(`[data-category-id="${cat.id}"]`)?.getBoundingClientRect().bottom + 8}px`,
-                    left: `${document.querySelector(`[data-category-id="${cat.id}"]`)?.getBoundingClientRect().left}px`,
-                  }}
-                  onMouseEnter={handleDropdownMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  <div className="absolute -top-2 left-4 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45"></div>
-                  {cat.subcategorias.map((sub) => (
-                    <button
-                      key={sub.id}
-                      className="w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 flex items-center gap-2"
-                      onClick={() => handleSubcategoryClick(sub, cat)}
-                    >
-                      <span className="w-2 h-2 bg-blue-400 rounded-full opacity-60"></span>
-                      {sub.nombre}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           ))}
         </div>
+        {/* Submenú flotante global */}
+        {activeDropdown && categorias.find(cat => cat.id === activeDropdown)?.subcategorias?.length > 0 && (
+          <div
+            className="cat-bar-submenu animate-in"
+            style={{
+              position: 'fixed',
+              top: dropdownPos.top,
+              left: dropdownPos.left,
+              minWidth: dropdownPos.width,
+              zIndex: 30000
+            }}
+            onMouseEnter={handleMouseEnterAny}
+            onMouseLeave={handleMouseLeave}
+          >
+            <div className="cat-bar-submenu-arrow" style={{ left: 32 }}></div>
+            {categorias.find(cat => cat.id === activeDropdown).subcategorias.map((sub) => (
+              <button
+                key={sub.id}
+                className="cat-bar-sub-btn"
+                onClick={() => handleSubcategoryClick(sub, categorias.find(cat => cat.id === activeDropdown))}
+              >
+                <span className="cat-bar-dot"></span>
+                {sub.nombre}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes slide-in-from-top-2 {
-          from { transform: translateY(-8px); }
-          to { transform: translateY(0); }
-        }
-
-        .animate-in {
-          animation: fade-in 0.2s ease-out, slide-in-from-top-2 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
