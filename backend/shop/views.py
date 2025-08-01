@@ -269,7 +269,11 @@ from rest_framework.exceptions import PermissionDenied
 class ProductoRetrieveUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_object(self):
         obj = super().get_object()
