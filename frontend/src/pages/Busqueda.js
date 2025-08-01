@@ -252,47 +252,53 @@ const q = params.get('q');
 							<option value="precio_mayor">Mayor precio</option>
 						</select>
 					</div>
-					{productos.map((producto) => (
-						<Link
-							key={producto.id}
-							to={`/producto/${producto.id}`}
-							className="producto-link-wrapper"
-							style={{ textDecoration: 'none', color: 'inherit' }}
-						>
-							<div className="producto-card">
-								<img
-									src={producto.imagen}
-									alt={producto.nombre}
-									className="producto-img"
-								/>
-								<div className="producto-info">
-									<div className="producto-nombre">{producto.nombre}</div>
-									<div className="producto-precio">
-										{producto.en_oferta && producto.descuento > 0 ? (
-											<>
-												<span style={{ color: '#e53935', fontWeight: 700 }}>
-													$ {Math.floor(producto.precio_con_descuento).toLocaleString()}
-												</span>
-												<span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
-													$ {Math.floor(producto.precio).toLocaleString()}
-												</span>
-												<span style={{ color: '#388e3c', marginLeft: 8 }}>
-													-{producto.descuento}%
-												</span>
-											</>
-										) : (
-											producto.precio
-												? `$ ${Math.floor(producto.precio).toLocaleString()}`
-												: "Precio a convenir"
-										)}
-									</div>
-									<div className="producto-ciudad">
-										{producto.ciudad || ""}
-									</div>
-								</div>
-							</div>
-						</Link>
-					))}
+		  {productos.length === 0 ? (
+			<div style={{textAlign: 'center', color: '#888', fontSize: 20, marginTop: 40}}>
+			  Esta categoria no tiene por el momento productos en oferta
+			</div>
+		  ) : (
+			productos.map((producto) => (
+			  <Link
+				key={producto.id}
+				to={`/producto/${producto.id}`}
+				className="producto-link-wrapper"
+				style={{ textDecoration: 'none', color: 'inherit' }}
+			  >
+				<div className="producto-card">
+				  <img
+					src={producto.imagen}
+					alt={producto.nombre}
+					className="producto-img"
+				  />
+				  <div className="producto-info">
+					<div className="producto-nombre">{producto.nombre}</div>
+					<div className="producto-precio">
+					  {producto.en_oferta && producto.descuento > 0 ? (
+						<>
+						  <span style={{ color: '#e53935', fontWeight: 700 }}>
+							$ {Math.floor(producto.precio_con_descuento).toLocaleString()}
+						  </span>
+						  <span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
+							$ {Math.floor(producto.precio).toLocaleString()}
+						  </span>
+						  <span style={{ color: '#388e3c', marginLeft: 8 }}>
+							-{producto.descuento}%
+						  </span>
+						</>
+					  ) : (
+						producto.precio
+						  ? `$ ${Math.floor(producto.precio).toLocaleString()}`
+						  : "Precio a convenir"
+					  )}
+					</div>
+					<div className="producto-ciudad">
+					  {producto.ciudad || ""}
+					</div>
+				  </div>
+				</div>
+			  </Link>
+			))
+		  )}
 				</main>
 			</div>
 		</div>
