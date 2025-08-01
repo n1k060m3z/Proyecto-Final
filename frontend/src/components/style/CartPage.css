@@ -1,0 +1,156 @@
+/* Estilos base para la página del carrito */
+.cart-page-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.cart-main {
+  flex: 2;
+  min-width: 0;
+}
+
+.cart-side {
+  flex: 1;
+  min-width: 280px;
+  max-width: 340px;
+  position: sticky;
+  top: 2rem;
+}
+
+.cart-filters {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cart-product-group {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+}
+
+.cart-group-title {
+  font-weight: bold;
+  margin-bottom: 0.7rem;
+}
+
+.cart-product {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0.7rem 0;
+}
+
+.cart-product-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f7f7f7;
+}
+
+.cart-product-info {
+  flex: 1;
+}
+
+.cart-product-name {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+.cart-product-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cart-remove {
+  color: #0077ff;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.cart-product-price {
+  font-weight: bold;
+  font-size: 1.1rem;
+  min-width: 80px;
+  text-align: right;
+}
+
+.cart-shipping {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.7rem;
+  font-size: 0.98rem;
+}
+
+.cart-shipping-price {
+  font-weight: bold;
+}
+
+.cart-summary {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  padding: 1.5rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.cart-summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+  font-size: 1rem;
+}
+
+.cart-summary-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 1.2rem 0 1.5rem 0;
+}
+
+.cart-summary-btn {
+  width: 100%;
+  background: #2979ff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.9rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cart-summary-btn:hover {
+  background: #155ab6;
+}
+
+@media (max-width: 900px) {
+  .cart-page-container {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1rem 0.5rem;
+  }
+  .cart-side {
+    position: static;
+    max-width: 100%;
+    width: 100%;
+  }
+}

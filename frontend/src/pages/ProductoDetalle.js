@@ -1,12 +1,56 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from '../api/axios';
+import AddToCartButton from '../components/AddToCartButton';
+import { toast } from 'react-hot-toast';
 
 const ProductoDetalle = () => {
   const { id } = useParams();
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [enCarrito, setEnCarrito] = useState(false);
+  // Verificar si el producto ya está en el carrito
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token || !producto) return;
+    fetch('http://localhost:8000/api/carrito/', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (Array.isArray(data)) {
+          setEnCarrito(data.some(item => item.producto && (item.producto.id === producto.id || item.producto === producto.id)));
+        }
+      })
+      .catch(() => setEnCarrito(false));
+  }, [producto]);
+
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Debes iniciar sesión');
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:8000/api/carrito/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ producto_id: producto.id, cantidad: 1 })
+      });
+      if (res.ok) {
+        toast.success('Producto agregado al carrito');
+        setEnCarrito(true);
+      } else {
+        toast.error('No se pudo agregar al carrito');
+      }
+    } catch {
+      toast.error('Error al conectar con el servidor');
+    }
+  };
 
   useEffect(() => {
     api.get(`http://localhost:8000/api/productos/${id}/`)
@@ -53,6 +97,13 @@ const ProductoDetalle = () => {
         </div>
         <div style={{ fontSize: 15, color: '#888', marginBottom: 8 }}>
           <b>Vendedor:</b> {producto.vendedor || '-'}
+        </div>
+        <div style={{ marginTop: 24, textAlign: 'right' }}>
+          <AddToCartButton
+            onClick={handleAddToCart}
+            added={enCarrito}
+            disabled={enCarrito}
+          />
         </div>
       </div>
     </div>
