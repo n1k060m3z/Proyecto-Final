@@ -6,7 +6,7 @@ from .views import (
     RegistroUsuarioView,
     CustomTokenObtainPairView,
     CarritoListCreateView,
-    CarritoDeleteView,
+    CarritoUpdateDeleteView,
     PedidoCreateView,
     ProductosPorCategoriaView,
     ProductosPorSubcategoriaView,  # <-- nueva vista
@@ -36,7 +36,7 @@ urlpatterns = [
 
     # Carrito
     path('carrito/', CarritoListCreateView.as_view(), name='carrito-list-create'),
-    path('carrito/<int:id>/', CarritoDeleteView.as_view(), name='carrito-delete'),
+    path('carrito/<int:id>/', CarritoUpdateDeleteView.as_view(), name='carrito-update-delete'),
 
     # Pedidos
     path('pedido/', PedidoCreateView.as_view(), name='crear-pedido'),

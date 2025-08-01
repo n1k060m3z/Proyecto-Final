@@ -25,6 +25,8 @@ const Busqueda = () => {
 	const location = useLocation();
   const [productos, setProductos] = useState([]);
   const [carrito, setCarrito] = useState([]);
+  // Estado para cantidades por producto
+  const [cantidades, setCantidades] = useState({});
   // Cargar productos en carrito para marcar los que ya están
   useEffect(() => {
 	const token = localStorage.getItem('token');
@@ -38,6 +40,17 @@ const Busqueda = () => {
   }, []);
 
   const handleAddToCart = async (productoId) => {
+	const producto = productos.find(p => p.id === productoId);
+	const cantidad = parseInt(cantidades[productoId] || 1);
+	if (!producto) return;
+	if (cantidad < 1) {
+	  toast.error('La cantidad debe ser al menos 1');
+	  return;
+	}
+	if (cantidad > producto.stock) {
+	  toast.error('No hay suficiente stock disponible');
+	  return;
+	}
 	const token = localStorage.getItem('token');
 	if (!token) {
 	  toast.error('Debes iniciar sesión');
@@ -50,7 +63,7 @@ const Busqueda = () => {
 		  'Content-Type': 'application/json',
 		  Authorization: `Bearer ${token}`,
 		},
-		body: JSON.stringify({ producto_id: productoId, cantidad: 1 })
+		body: JSON.stringify({ producto_id: productoId, cantidad })
 	  });
 	  if (res.ok) {
 		toast.success('Producto agregado al carrito');
@@ -299,57 +312,72 @@ const q = params.get('q');
 			  Esta categoria no tiene por el momento productos en oferta
 			</div>
 		  ) : (
-	productos.map((producto) => {
-	  const enCarrito = carrito.some((item) => item.producto && (item.producto.id === producto.id || item.producto === producto.id));
-	  return (
-		<div key={producto.id} className="producto-link-wrapper" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-		  <Link
-			to={`/producto/${producto.id}`}
-			style={{ flex: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}
-		  >
-			<div className="producto-card" style={{ width: '100%' }}>
-			  <img
-				src={producto.imagen}
-				alt={producto.nombre}
-				className="producto-img"
-			  />
-			  <div className="producto-info">
-				<div className="producto-nombre">{producto.nombre}</div>
-				<div className="producto-precio">
-				  {producto.en_oferta && producto.descuento > 0 ? (
-					<>
-					  <span style={{ color: '#e53935', fontWeight: 700 }}>
-						$ {Math.floor(producto.precio_con_descuento).toLocaleString()}
-					  </span>
-					  <span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
-						$ {Math.floor(producto.precio).toLocaleString()}
-					  </span>
-					  <span style={{ color: '#388e3c', marginLeft: 8 }}>
-						-{producto.descuento}%
-					  </span>
-					</>
-				  ) : (
-					producto.precio
-					  ? `$ ${Math.floor(producto.precio).toLocaleString()}`
-					  : "Precio a convenir"
-				  )}
-				</div>
-				<div className="producto-ciudad">
-				  {producto.ciudad || ""}
-				</div>
+  productos.map((producto) => {
+	const enCarrito = carrito.some((item) => item.producto && (item.producto.id === producto.id || item.producto === producto.id));
+	return (
+	  <div key={producto.id} className="producto-link-wrapper" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+		<Link
+		  to={`/producto/${producto.id}`}
+		  style={{ flex: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}
+		>
+		  <div className="producto-card" style={{ width: '100%' }}>
+			<img
+			  src={producto.imagen}
+			  alt={producto.nombre}
+			  className="producto-img"
+			/>
+			<div className="producto-info">
+			  <div className="producto-nombre">{producto.nombre}</div>
+			  <div className="producto-precio">
+				{producto.en_oferta && producto.descuento > 0 ? (
+				  <>
+					<span style={{ color: '#e53935', fontWeight: 700 }}>
+					  $ {Math.floor(producto.precio_con_descuento).toLocaleString()}
+					</span>
+					<span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
+					  $ {Math.floor(producto.precio).toLocaleString()}
+					</span>
+					<span style={{ color: '#388e3c', marginLeft: 8 }}>
+					  -{producto.descuento}%
+					</span>
+				  </>
+				) : (
+				  producto.precio
+					? `$ ${Math.floor(producto.precio).toLocaleString()}`
+					: "Precio a convenir"
+				)}
+			  </div>
+			  <div className="producto-ciudad">
+				{producto.ciudad || ""}
 			  </div>
 			</div>
-		  </Link>
-		  <div style={{ marginLeft: 16 }}>
-			<AddToCartButton
-			  onClick={() => handleAddToCart(producto.id)}
-			  added={enCarrito}
-			  disabled={enCarrito}
-			/>
 		  </div>
+		</Link>
+		<div style={{ marginLeft: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+		  <input
+			type="number"
+			min={1}
+			max={producto.stock}
+			value={cantidades[producto.id] || 1}
+			onChange={e => {
+			  let val = e.target.value.replace(/[^0-9]/g, '');
+			  if (val === '' || parseInt(val) < 1) val = 1;
+			  if (parseInt(val) > producto.stock) val = producto.stock;
+			  setCantidades(c => ({ ...c, [producto.id]: val }));
+			}}
+			style={{ width: 60, marginBottom: 4, textAlign: 'center' }}
+			disabled={enCarrito || producto.stock === 0}
+		  />
+		  <AddToCartButton
+			onClick={() => handleAddToCart(producto.id)}
+			added={enCarrito}
+			disabled={enCarrito || producto.stock === 0}
+		  />
+		  {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Sin stock</span>}
 		</div>
-	  );
-	})
+	  </div>
+	);
+  })
 		  )}
 				</main>
 			</div>

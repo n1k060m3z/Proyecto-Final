@@ -11,6 +11,7 @@ const ProductoDetalle = () => {
   const [error, setError] = useState(null);
   const [enCarrito, setEnCarrito] = useState(false);
   // Verificar si el producto ya está en el carrito
+  const [cantidad, setCantidad] = useState(1);
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !producto) return;
@@ -32,6 +33,15 @@ const ProductoDetalle = () => {
       toast.error('Debes iniciar sesión');
       return;
     }
+    if (!producto) return;
+    if (cantidad < 1) {
+      toast.error('La cantidad debe ser al menos 1');
+      return;
+    }
+    if (cantidad > producto.stock) {
+      toast.error('No hay suficiente stock disponible');
+      return;
+    }
     try {
       const res = await fetch('http://localhost:8000/api/carrito/', {
         method: 'POST',
@@ -39,7 +49,7 @@ const ProductoDetalle = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ producto_id: producto.id, cantidad: 1 })
+        body: JSON.stringify({ producto_id: producto.id, cantidad })
       });
       if (res.ok) {
         toast.success('Producto agregado al carrito');
@@ -98,12 +108,29 @@ const ProductoDetalle = () => {
         <div style={{ fontSize: 15, color: '#888', marginBottom: 8 }}>
           <b>Vendedor:</b> {producto.vendedor || '-'}
         </div>
-        <div style={{ marginTop: 24, textAlign: 'right' }}>
+        <div style={{ marginTop: 24, textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <input
+              type="number"
+              min={1}
+              max={producto.stock}
+              value={cantidad}
+              onChange={e => {
+                let val = e.target.value.replace(/[^0-9]/g, '');
+                if (val === '' || parseInt(val) < 1) val = 1;
+                if (parseInt(val) > producto.stock) val = producto.stock;
+                setCantidad(parseInt(val));
+              }}
+              style={{ width: 60, textAlign: 'center' }}
+              disabled={enCarrito || producto.stock === 0}
+            />
+          </div>
           <AddToCartButton
             onClick={handleAddToCart}
             added={enCarrito}
-            disabled={enCarrito}
+            disabled={enCarrito || producto.stock === 0}
           />
+          {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Sin stock</span>}
         </div>
       </div>
     </div>
