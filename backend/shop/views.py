@@ -145,13 +145,16 @@ class CarritoListCreateView(generics.ListCreateAPIView):
         serializer.save(carrito=carrito)
 
 # --- Vista para eliminar item del carrito ---
-class CarritoDeleteView(generics.DestroyAPIView):
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
+
+# Vista para eliminar y actualizar item del carrito
+class CarritoUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = CarritoItemSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'id'
 
     def get_queryset(self):
-        return CarritoItem.objects.filter(usuario=self.request.user)
+        return CarritoItem.objects.filter(carrito__usuario=self.request.user)
 
 # --- Vista para crear un pedido (desde el carrito) ---
 class PedidoCreateView(APIView):
@@ -160,23 +163,24 @@ class PedidoCreateView(APIView):
     def post(self, request):
         usuario = request.user
         carrito = Carrito.objects.filter(usuario=usuario).first()
-
+        ids = request.data.get('items')
         if not carrito or not carrito.items.exists():
             return Response({'error': 'El carrito está vacío'}, status=status.HTTP_400_BAD_REQUEST)
-
-        total = sum(item.producto.precio * item.cantidad for item in carrito.items.all())
-
+        if not ids or not isinstance(ids, list):
+            return Response({'error': 'No se seleccionaron productos'}, status=status.HTTP_400_BAD_REQUEST)
+        items = carrito.items.filter(id__in=ids)
+        if not items.exists():
+            return Response({'error': 'No se encontraron productos seleccionados'}, status=status.HTTP_400_BAD_REQUEST)
+        total = sum(item.producto.precio * item.cantidad for item in items)
         pedido = Pedido.objects.create(usuario=usuario, total=total)
-
-        for item in carrito.items.all():
+        for item in items:
             PedidoItem.objects.create(
                 pedido=pedido,
                 producto=item.producto,
                 cantidad=item.cantidad
             )
-
-        carrito.items.all().delete()
-
+        # Eliminar solo los seleccionados
+        items.delete()
         return Response({'mensaje': 'Pedido creado exitosamente'}, status=status.HTTP_201_CREATED)
 
 # --- Vista para listar productos por categoría ---

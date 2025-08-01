@@ -6,6 +6,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import Cart from './pages/Cart';
+import CheckoutLayout from './pages/checkout/CheckoutLayout';
+import CheckoutEnvio from './pages/checkout/CheckoutEnvio';
+import CheckoutPago from './pages/checkout/CheckoutPago';
+import CheckoutResumen from './pages/checkout/CheckoutResumen';
 import ResumenPedido from './pages/ResumenPedido'; // ✅ NUEVO
 import SellerDashboard from './pages/SellerDashboard';
 import ProductForm from './pages/ProductForm';
@@ -49,6 +53,13 @@ function App() {
               path="/carrito"
               element={isAuthenticated ? <Cart /> : <Navigate to="/iniciar-sesion" replace />}
             />
+            {/* Checkout anidado */}
+            <Route path="/checkout" element={isAuthenticated ? <CheckoutLayout /> : <Navigate to="/iniciar-sesion" replace /> }>
+              <Route index element={<CheckoutEnvio />} />
+              <Route path="envio" element={<CheckoutEnvio />} />
+              <Route path="pago" element={<CheckoutPago />} />
+              <Route path="resumen" element={<CheckoutResumen />} />
+            </Route>
             <Route
               path="/resumen-pedido"
               element={isAuthenticated ? <ResumenPedido /> : <Navigate to="/iniciar-sesion" replace />}

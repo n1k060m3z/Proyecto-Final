@@ -34,7 +34,7 @@ class ProductoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'vendedor', 'nombre', 'descripcion', 'precio', 'imagen',
             'categoria', 'categoria_id', 'subcategoria', 'en_oferta', 'descuento',
-            'precio_con_descuento', 'subcategoria_id', 'activo'  # <-- Agregado campo activo
+            'precio_con_descuento', 'subcategoria_id', 'activo', 'stock'
         ]
 
     def get_precio_con_descuento(self, obj):
