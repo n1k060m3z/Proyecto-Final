@@ -9,6 +9,8 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f5f5f5;
   color: #333;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
 }
 
 /* NAVBAR */
@@ -23,33 +25,19 @@ body {
   z-index: 100;
 } */
 
-/* .navbar .logo {
-  font-size: 1.5rem;
-  color: rgb(255, 255, 255);
-  font-weight: bold;
-  text-decoration: none;
-} */
 
-/* .navbar .nav-links {
-  display: flex;
-  gap: 1rem;
-} */
-
-/* .navbar .nav-links a {
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-} */
-
-/* .navbar .nav-links a:hover {
-  text-decoration: underline;
-} */
+/*
+  Se eliminaron reglas comentadas y erróneas que causaban errores de sintaxis.
+  Si necesitas personalizar la navbar, hazlo en el archivo navbar.css o descomenta solo lo necesario.
+*/
 
 /* CONTENEDOR PRINCIPAL */
 .container {
   max-width: 1200px;
   margin: auto;
   padding: 2rem 1rem;
+  overflow: visible !important;
+  position: relative;
 }
 
 /* FORMULARIOS DE LOGIN Y REGISTRO */
@@ -244,7 +232,7 @@ body {
 
 /* BARRA DE CATEGORÍAS MEJORADA */
 .categorias-bar {
-  background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
+  /* Sin fondo ni estilos visuales, solo layout */
   border-radius: 0;
   box-shadow: none;
   padding: 0;
