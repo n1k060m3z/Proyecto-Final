@@ -7,6 +7,7 @@ function ProductForm() {
   const [descripcion, setDescripcion] = useState('');
   const [precio, setPrecio] = useState('');
   const [imagen, setImagen] = useState(null);
+  const [stock, setStock] = useState('');
   const [categorias, setCategorias] = useState([]);
   const [categoriaId, setCategoriaId] = useState('');
   const [subcategoriaId, setSubcategoriaId] = useState('');
@@ -38,6 +39,7 @@ function ProductForm() {
     if (imagen) formData.append('imagen', imagen);
     if (categoriaId) formData.append('categoria_id', categoriaId);
     if (subcategoriaId) formData.append('subcategoria', subcategoriaId);
+    if (stock) formData.append('stock', stock);
 
     try {
       const token = localStorage.getItem('token');
@@ -55,6 +57,7 @@ function ProductForm() {
       setImagen(null);
       setCategoriaId('');
       setSubcategoriaId('');
+      setStock('');
     } catch (error) {
       if (error.response) {
         alert('Error al crear el producto: ' + JSON.stringify(error.response.data));
@@ -91,6 +94,8 @@ function ProductForm() {
           </select>
         </>
       ) : null}
+      <label>Stock</label>
+      <input type="number" placeholder="Stock" value={stock} min={1} onChange={e => setStock(e.target.value)} required />
       <label>Imagen</label>
       <input type="file" accept="image/*" onChange={e => setImagen(e.target.files[0])} />
       <button type="submit">Crear producto</button>

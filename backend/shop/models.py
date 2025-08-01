@@ -39,6 +39,7 @@ class Producto(models.Model):
     en_oferta = models.BooleanField(default=False)  # Cambia el valor por defecto a False
     descuento = models.PositiveIntegerField(default=0, help_text='Porcentaje de descuento (0-100)')
     activo = models.BooleanField(default=True, help_text='Indica si el producto está activo (True) o pausado (False)')
+    stock = models.PositiveIntegerField(default=1, help_text='Unidades disponibles en inventario')
 
     def __str__(self):
         return self.nombre

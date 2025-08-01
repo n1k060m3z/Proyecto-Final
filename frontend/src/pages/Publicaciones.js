@@ -7,6 +7,7 @@ import '../style/Publicaciones.css';
 const acciones = [
   { label: 'Modificar', value: 'modificar' },
   { label: 'Gestionar precios', value: 'precios' },
+  { label: 'Modificar cantidad', value: 'stock' },
   { label: 'Ir a la página de producto', value: 'ver' },
   { label: 'Analizar rendimiento', value: 'rendimiento' },
   { label: 'Necesito ayuda', value: 'ayuda' },
@@ -17,6 +18,8 @@ const Publicaciones = () => {
   const [seleccionados, setSeleccionados] = useState([]);
   const [menuAccion, setMenuAccion] = useState(null);
   const [anchorMenu, setAnchorMenu] = useState(null);
+  const [editandoStock, setEditandoStock] = useState(null); // id del producto que se está editando
+  const [nuevoStock, setNuevoStock] = useState(1);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -116,6 +119,11 @@ const Publicaciones = () => {
       navigate(`/editar-publicacion/${producto.id}`);
       return;
     }
+    if (accion === 'Modificar cantidad') {
+      setEditandoStock(producto.id);
+      setNuevoStock(producto.stock || 1);
+      return;
+    }
     if (accion === 'Ir a la página de producto') {
       navigate(`/producto/${producto.id}`);
       return;
@@ -190,6 +198,35 @@ const Publicaciones = () => {
                         }}
                       />
                     </label>
+                  )}
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <b>Stock:</b> {producto.stock}
+                  {editandoStock === producto.id && (
+                    <span style={{ marginLeft: 8 }}>
+                      <input
+                        type="number"
+                        min={1}
+                        value={nuevoStock}
+                        style={{ width: 70, marginRight: 8 }}
+                        onChange={e => {
+                          let val = parseInt(e.target.value, 10);
+                          if (isNaN(val) || val < 1) val = 1;
+                          setNuevoStock(val);
+                        }}
+                      />
+                      <button
+                        onClick={async () => {
+                          await api.patch(`productos/${producto.id}/`, { stock: nuevoStock }, {
+                            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                          });
+                          setEditandoStock(null);
+                          recargarProductos();
+                        }}
+                        style={{ marginRight: 4 }}
+                      >Guardar</button>
+                      <button onClick={() => setEditandoStock(null)}>Cancelar</button>
+                    </span>
                   )}
                 </div>
                 {producto.activo ? (
