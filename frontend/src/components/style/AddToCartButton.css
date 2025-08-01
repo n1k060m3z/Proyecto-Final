@@ -1,0 +1,30 @@
+/* Botón de agregar al carrito reutilizable */
+.add-to-cart-btn {
+  border: 2px solid #e53935;
+  color: #e53935;
+  background: #fff;
+  padding: 0.4rem 1.2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+  outline: none;
+}
+.add-to-cart-btn:hover:not(:disabled) {
+  background: #e53935;
+  color: #fff;
+}
+.add-to-cart-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.add-to-cart-btn.added {
+  border-color: #2979ff;
+  color: #2979ff;
+  background: #e3f0ff;
+}
+.add-to-cart-btn.added:hover {
+  background: #2979ff;
+  color: #fff;
+}

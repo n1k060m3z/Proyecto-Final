@@ -68,7 +68,13 @@ class ProductoListView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        productos = Producto.objects.all()
+        user = request.user if request.user.is_authenticated else None
+        if user and hasattr(user, 'es_vendedor') and user.es_vendedor:
+            # Si es vendedor, mostrar todos sus productos (activos y pausados)
+            productos = Producto.objects.filter(vendedor=user)
+        else:
+            # Si es cliente o no autenticado, solo productos activos
+            productos = Producto.objects.filter(activo=True)
         serializer = ProductoSerializer(productos, many=True)
         return Response(serializer.data)
 
@@ -180,8 +186,12 @@ class ProductosPorCategoriaView(generics.ListAPIView):
 
     def get_queryset(self):
         categoria_id = self.kwargs.get('categoria_id')
-        # Solo productos que realmente tienen la categoría asignada
-        return Producto.objects.filter(categoria_id=categoria_id)
+        user = self.request.user if self.request.user.is_authenticated else None
+        if user and hasattr(user, 'es_vendedor') and user.es_vendedor:
+            # El vendedor ve todos sus productos de la categoría
+            return Producto.objects.filter(categoria_id=categoria_id, vendedor=user)
+        # Clientes y no autenticados solo ven productos activos
+        return Producto.objects.filter(categoria_id=categoria_id, activo=True)
 
 # --- Vista para listar categorías ---
 class CategoriaListView(generics.ListAPIView):
@@ -253,12 +263,25 @@ class MisPublicacionesView(APIView):
         return Response(serializer.data)
 
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from rest_framework.exceptions import PermissionDenied
 
 # --- Vista para obtener, actualizar y eliminar un producto por ID (detalle) ---
 class ProductoRetrieveUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_object(self):
+        obj = super().get_object()
+        # Solo el vendedor dueño puede modificar/eliminar
+        if self.request.method in ['PATCH', 'PUT', 'DELETE']:
+            if obj.vendedor != self.request.user:
+                raise PermissionDenied('No tienes permiso para modificar este producto.')
+        return obj
 
 # --- Vista para listar productos por subcategoría ---
 class ProductosPorSubcategoriaView(generics.ListAPIView):
@@ -267,8 +290,10 @@ class ProductosPorSubcategoriaView(generics.ListAPIView):
 
     def get_queryset(self):
         subcategoria_id = self.kwargs.get('subcategoria_id')
-        # Solo productos que realmente tienen la subcategoría asignada
-        return Producto.objects.filter(subcategoria_id=subcategoria_id)
+        user = self.request.user if self.request.user.is_authenticated else None
+        if user and hasattr(user, 'es_vendedor') and user.es_vendedor:
+            return Producto.objects.filter(subcategoria_id=subcategoria_id, vendedor=user)
+        return Producto.objects.filter(subcategoria_id=subcategoria_id, activo=True)
 
 # --- Vista para listar productos en oferta por categoría ---
 class ProductosEnOfertaPorCategoriaView(generics.ListAPIView):
@@ -277,9 +302,12 @@ class ProductosEnOfertaPorCategoriaView(generics.ListAPIView):
 
     def get_queryset(self):
         categoria_id = self.kwargs.get('categoria_id')
-        # Mostrar productos en oferta de cualquier categoría si categoria_id es la de "Ofertas"
+        user = self.request.user if self.request.user.is_authenticated else None
         categoria_ofertas = Categoria.objects.filter(nombre__iexact='Ofertas').first()
+        if user and hasattr(user, 'es_vendedor') and user.es_vendedor:
+            if categoria_ofertas and str(categoria_id) == str(categoria_ofertas.id):
+                return Producto.objects.filter(en_oferta=True, vendedor=user)
+            return Producto.objects.filter(categoria_id=categoria_id, en_oferta=True, vendedor=user)
         if categoria_ofertas and str(categoria_id) == str(categoria_ofertas.id):
-            return Producto.objects.filter(en_oferta=True)
-        # Si no, mostrar solo los productos en oferta de la categoría seleccionada
-        return Producto.objects.filter(categoria_id=categoria_id, en_oferta=True)
+            return Producto.objects.filter(en_oferta=True, activo=True)
+        return Producto.objects.filter(categoria_id=categoria_id, en_oferta=True, activo=True)

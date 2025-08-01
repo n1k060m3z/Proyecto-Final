@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import AddToCartButton from '../components/AddToCartButton';
+import { toast } from 'react-hot-toast';
 import api from '../api/axios';
 import { useParams, useLocation, Link } from "react-router-dom";
 import "../style/busqueda.css";
@@ -21,7 +23,47 @@ const categoriaNombresPorDefecto = {
 const Busqueda = () => {
 	const { categoriaId, subcategoriaId } = useParams();
 	const location = useLocation();
-	const [productos, setProductos] = useState([]);
+  const [productos, setProductos] = useState([]);
+  const [carrito, setCarrito] = useState([]);
+  // Cargar productos en carrito para marcar los que ya están
+  useEffect(() => {
+	const token = localStorage.getItem('token');
+	if (!token) return;
+	fetch('http://localhost:8000/api/carrito/', {
+	  headers: { Authorization: `Bearer ${token}` }
+	})
+	  .then(res => res.ok ? res.json() : [])
+	  .then(data => setCarrito(Array.isArray(data) ? data : []))
+	  .catch(() => setCarrito([]));
+  }, []);
+
+  const handleAddToCart = async (productoId) => {
+	const token = localStorage.getItem('token');
+	if (!token) {
+	  toast.error('Debes iniciar sesión');
+	  return;
+	}
+	try {
+	  const res = await fetch('http://localhost:8000/api/carrito/', {
+		method: 'POST',
+		headers: {
+		  'Content-Type': 'application/json',
+		  Authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify({ producto_id: productoId, cantidad: 1 })
+	  });
+	  if (res.ok) {
+		toast.success('Producto agregado al carrito');
+		// Actualizar carrito local
+		const nuevo = await res.json();
+		setCarrito((prev) => [...prev, nuevo]);
+	  } else {
+		toast.error('No se pudo agregar al carrito');
+	  }
+	} catch {
+	  toast.error('Error al conectar con el servidor');
+	}
+  };
 	const [titulo, setTitulo] = useState("");
 	const [orden, setOrden] = useState("relevantes");
 	const [categoriasSidebar, setCategoriasSidebar] = useState([]);
@@ -252,52 +294,62 @@ const q = params.get('q');
 							<option value="precio_mayor">Mayor precio</option>
 						</select>
 					</div>
-		  {productos.length === 0 ? (
+  {productos.length === 0 ? (
 			<div style={{textAlign: 'center', color: '#888', fontSize: 20, marginTop: 40}}>
 			  Esta categoria no tiene por el momento productos en oferta
 			</div>
 		  ) : (
-			productos.map((producto) => (
-			  <Link
-				key={producto.id}
-				to={`/producto/${producto.id}`}
-				className="producto-link-wrapper"
-				style={{ textDecoration: 'none', color: 'inherit' }}
-			  >
-				<div className="producto-card">
-				  <img
-					src={producto.imagen}
-					alt={producto.nombre}
-					className="producto-img"
-				  />
-				  <div className="producto-info">
-					<div className="producto-nombre">{producto.nombre}</div>
-					<div className="producto-precio">
-					  {producto.en_oferta && producto.descuento > 0 ? (
-						<>
-						  <span style={{ color: '#e53935', fontWeight: 700 }}>
-							$ {Math.floor(producto.precio_con_descuento).toLocaleString()}
-						  </span>
-						  <span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
-							$ {Math.floor(producto.precio).toLocaleString()}
-						  </span>
-						  <span style={{ color: '#388e3c', marginLeft: 8 }}>
-							-{producto.descuento}%
-						  </span>
-						</>
-					  ) : (
-						producto.precio
-						  ? `$ ${Math.floor(producto.precio).toLocaleString()}`
-						  : "Precio a convenir"
-					  )}
-					</div>
-					<div className="producto-ciudad">
-					  {producto.ciudad || ""}
-					</div>
-				  </div>
+	productos.map((producto) => {
+	  const enCarrito = carrito.some((item) => item.producto && (item.producto.id === producto.id || item.producto === producto.id));
+	  return (
+		<div key={producto.id} className="producto-link-wrapper" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+		  <Link
+			to={`/producto/${producto.id}`}
+			style={{ flex: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}
+		  >
+			<div className="producto-card" style={{ width: '100%' }}>
+			  <img
+				src={producto.imagen}
+				alt={producto.nombre}
+				className="producto-img"
+			  />
+			  <div className="producto-info">
+				<div className="producto-nombre">{producto.nombre}</div>
+				<div className="producto-precio">
+				  {producto.en_oferta && producto.descuento > 0 ? (
+					<>
+					  <span style={{ color: '#e53935', fontWeight: 700 }}>
+						$ {Math.floor(producto.precio_con_descuento).toLocaleString()}
+					  </span>
+					  <span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
+						$ {Math.floor(producto.precio).toLocaleString()}
+					  </span>
+					  <span style={{ color: '#388e3c', marginLeft: 8 }}>
+						-{producto.descuento}%
+					  </span>
+					</>
+				  ) : (
+					producto.precio
+					  ? `$ ${Math.floor(producto.precio).toLocaleString()}`
+					  : "Precio a convenir"
+				  )}
 				</div>
-			  </Link>
-			))
+				<div className="producto-ciudad">
+				  {producto.ciudad || ""}
+				</div>
+			  </div>
+			</div>
+		  </Link>
+		  <div style={{ marginLeft: 16 }}>
+			<AddToCartButton
+			  onClick={() => handleAddToCart(producto.id)}
+			  added={enCarrito}
+			  disabled={enCarrito}
+			/>
+		  </div>
+		</div>
+	  );
+	})
 		  )}
 				</main>
 			</div>
