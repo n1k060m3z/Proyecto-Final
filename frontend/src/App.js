@@ -35,8 +35,8 @@ function App() {
     <Router>
       <Navbar isAuthenticated={isAuthenticated} esVendedor={esVendedor} setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} />
       <Toaster position="top-center" reverseOrder={false} />
-      <div style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1 }}>
+      <div className="App">
+        <div className="main-content">
           <Routes>
             <Route path="/" element={<Home />} />
             {/* Rutas públicas */}
