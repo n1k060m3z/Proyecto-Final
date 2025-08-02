@@ -63,7 +63,21 @@ function CartProductGroup({ items, eliminarDelCarrito, selectedIds, handleSelect
               {item.producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Sin stock</span>}
             </div>
             <div className="cart-product-price">
-              ${parseFloat(item.producto.precio).toLocaleString()}
+              {item.producto.en_oferta && item.producto.descuento > 0 ? (
+                <>
+                  <span style={{ color: '#e53935', fontWeight: 700 }}>
+                    ${Math.floor(item.producto.precio * (1 - item.producto.descuento / 100)).toLocaleString()}
+                  </span>
+                  <span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
+                    ${parseFloat(item.producto.precio).toLocaleString()}
+                  </span>
+                  <span style={{ color: '#388e3c', marginLeft: 8 }}>
+                    -{item.producto.descuento}%
+                  </span>
+                </>
+              ) : (
+                `$${parseFloat(item.producto.precio).toLocaleString()}`
+              )}
             </div>
           </div>
         ) : (
@@ -217,7 +231,12 @@ function Cart() {
 
   const selectedItems = items.filter((item) => selectedIds.includes(item.id));
   const total = selectedItems.reduce((acc, item) => {
-    return acc + (item.producto ? parseFloat(item.producto.precio) * item.cantidad : 0);
+    if (!item.producto) return acc;
+    let precio = parseFloat(item.producto.precio);
+    if (item.producto.en_oferta && item.producto.descuento > 0) {
+      precio = precio * (1 - item.producto.descuento / 100);
+    }
+    return acc + precio * item.cantidad;
   }, 0);
   const shipping = selectedItems.length > 0 ? 12300 : 0;
 

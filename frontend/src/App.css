@@ -9,6 +9,9 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f5f5f5;
   color: #333;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   overflow-x: visible !important;
   overflow-y: visible !important;
 }
@@ -38,6 +41,21 @@ body {
   padding: 2rem 1rem;
   overflow: visible !important;
   position: relative;
+}
+
+/* Sticky footer global */
+#root, .App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1 0 auto;
+}
+
+footer {
+  flex-shrink: 0;
 }
 
 /* FORMULARIOS DE LOGIN Y REGISTRO */

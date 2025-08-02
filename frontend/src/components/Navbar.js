@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
-import './style/navbar.css';
+import './style/navbar-new.css';
 
 export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated, setEsVendedor }) {
   const [usuario, setUsuario] = useState(null);
@@ -36,16 +36,22 @@ export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated
           const value = e.target.elements.search.value.trim();
           if (value) navigate(`/buscar?q=${encodeURIComponent(value)}`);
         }}
-        style={{ display: 'inline-block', margin: '0 16px' }}
+        className="navbar-search-form"
+        autoComplete="off"
+        style={{ flex: 1, maxWidth: 600, margin: '0 32px' }}
       >
         <input
           name="search"
           type="text"
-          placeholder="Buscar productos..."
-          style={{ padding: '6px 12px', borderRadius: 4, border: '1px solid #2563eb', width: 180, background: '#e3eafe', color: '#222', fontSize: 16, fontWeight: 500 }}
+          placeholder="Buscar productos, marcas y más..."
+          className="navbar-search-input"
+          autoComplete="off"
         />
-        <button type="submit" style={{ padding: '6px 12px', borderRadius: 4, background: '#2563eb', color: 'white', border: 'none', marginLeft: 4, fontWeight: 600 }}>
-          Buscar
+        <button type="submit" className="navbar-search-btn" tabIndex={-1} aria-label="Buscar">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="7.5" stroke="#888" strokeWidth="2"/>
+            <line x1="16.0607" y1="16.4749" x2="20" y2="20.4142" stroke="#888" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
         </button>
       </form>
       <div className="space-x-4">
