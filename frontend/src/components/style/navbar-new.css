@@ -1,0 +1,190 @@
+/* NAVBAR MEJORADO */
+.navbar {
+  background: linear-gradient(90deg, #2563eb 60%, #3b82f6 100%);
+  padding: 1.1rem 2.5rem 1.1rem 2.5rem;
+  box-shadow: 0 4px 18px #2563eb22;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+  position: relative;
+  min-height: 68px;
+  z-index: 110000;
+}
+
+.navbar .logo {
+  font-size: 2rem;
+  font-weight: 800;
+  text-decoration: none;
+  color: #fff;
+  letter-spacing: 1px;
+  margin-right: 2.5rem;
+  transition: color 0.18s, text-shadow 0.18s;
+  text-shadow: 0 2px 12px #2563eb33;
+  cursor: pointer;
+}
+.navbar .logo:hover {
+  color: #ffe600;
+  text-shadow: 0 4px 18px #ffe60044;
+}
+
+/* BUSCADOR ESTILO MERCADO LIBRE */
+.navbar-search-form {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 8px #2563eb22;
+  padding: 0 0 0 16px;
+  height: 44px;
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  transition: box-shadow 0.18s;
+}
+.navbar-search-form:focus-within {
+  box-shadow: 0 4px 18px #2563eb44;
+}
+.navbar-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #444;
+  font-size: 1.13rem;
+  font-weight: 500;
+  padding: 0 0 0 0;
+  height: 100%;
+}
+.navbar-search-input::placeholder {
+  color: #888;
+  font-weight: 400;
+}
+.navbar-search-btn {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0 18px 0 12px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border-left: 1.5px solid #eee;
+  transition: background 0.18s;
+}
+.navbar-search-btn:hover svg {
+  stroke: #2563eb;
+}
+
+.navbar .space-x-4 {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+}
+
+.navbar .hover\:underline {
+  position: relative;
+  font-weight: 600;
+  font-size: 1.08rem;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.navbar .hover\:underline:hover {
+  color: #ffe600;
+}
+.navbar .hover\:underline::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 2px;
+  background: #ffe600;
+  transition: width 0.2s;
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+}
+.navbar .hover\:underline:hover::after {
+  width: 100%;
+}
+
+.navbar .user-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #ffe600;
+  font-weight: 700;
+  font-size: 1.08rem;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 12px 4px 8px;
+  transition: background 0.18s, color 0.18s;
+}
+.navbar .user-btn:hover {
+  background: #eaf1ff;
+  color: #2563eb;
+}
+
+.navbar .user-menu {
+  position: absolute;
+  right: 0;
+  margin-top: 0.7rem;
+  background: #fff;
+  color: #2563eb;
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px #2563eb22;
+  width: 12rem;
+  z-index: 99999;
+  border: 1.5px solid #e3eafe;
+  overflow: hidden;
+  animation: fadeInMenu 0.18s;
+}
+@keyframes fadeInMenu {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.navbar .user-menu a,
+.navbar .user-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 1.2rem;
+  background: none;
+  border: none;
+  text-align: left;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.navbar .user-menu a:hover,
+.navbar .user-menu button:hover {
+  background: #eaf1ff;
+  color: #174ea6;
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem 0.5rem;
+  }
+  .navbar .logo {
+    margin-bottom: 10px;
+    margin-right: 0;
+    font-size: 1.5rem;
+  }
+  .navbar form {
+    margin: 0 0 10px 0;
+    width: 100%;
+    max-width: 350px;
+  }
+  .navbar .space-x-4 {
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    justify-content: flex-start;
+  }
+}

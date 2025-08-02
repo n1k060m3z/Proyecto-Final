@@ -354,7 +354,9 @@ const q = params.get('q');
 		  </div>
 		</Link>
 		<div style={{ marginLeft: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+		  <label htmlFor={`cantidad-input-${producto.id}`} style={{ fontSize: 13, color: '#555', marginBottom: 2 }}>Cantidad</label>
 		  <input
+			id={`cantidad-input-${producto.id}`}
 			type="number"
 			min={1}
 			max={producto.stock}

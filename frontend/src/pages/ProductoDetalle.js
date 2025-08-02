@@ -109,8 +109,10 @@ const ProductoDetalle = () => {
           <b>Vendedor:</b> {producto.vendedor || '-'}
         </div>
         <div style={{ marginTop: 24, textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <label htmlFor="cantidad-input-detalle" style={{ fontSize: 13, color: '#555', marginBottom: 2 }}>Cantidad</label>
             <input
+              id="cantidad-input-detalle"
               type="number"
               min={1}
               max={producto.stock}
