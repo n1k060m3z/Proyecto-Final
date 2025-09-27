@@ -89,12 +89,13 @@ const Configuracion = ({ usuario, onUpdate }) => {
   const [form, setForm] = useState({
     username: usuario.username || '',
     email: usuario.email || '',
+    direccion: usuario.direccion || '',
   });
   const [passwordActual, setPasswordActual] = useState('');
   const [mensaje, setMensaje] = useState('');
 
   useEffect(() => {
-    setForm({ username: usuario.username || '', email: usuario.email || '' });
+    setForm({ username: usuario.username || '', email: usuario.email || '', direccion: usuario.direccion || '' });
   }, [usuario]);
 
   const handleChange = e => {
@@ -130,6 +131,10 @@ const Configuracion = ({ usuario, onUpdate }) => {
         <div className="mb-4">
           <label className="block mb-1 font-semibold">Correo electrónico</label>
           <input name="email" value={form.email} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">Dirección de entrega</label>
+          <input name="direccion" value={form.direccion} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="Ej: Calle 123 #45-67, Ciudad, Departamento" />
         </div>
         <div className="mb-4">
           <label className="block mb-1 font-semibold">Contraseña actual <span style={{color:'red'}}>*</span></label>
