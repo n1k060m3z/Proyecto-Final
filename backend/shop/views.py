@@ -356,3 +356,12 @@ class ProductosEnOfertaPorCategoriaView(generics.ListAPIView):
         if categoria_ofertas and str(categoria_id) == str(categoria_ofertas.id):
             return Producto.objects.filter(en_oferta=True, activo=True)
         return Producto.objects.filter(categoria_id=categoria_id, en_oferta=True, activo=True)
+
+# --- Vista para listar productos por vendedor ---
+class ProductosPorVendedorView(generics.ListAPIView):
+    serializer_class = ProductoSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        vendedor_id = self.kwargs.get('vendedor_id')
+        return Producto.objects.filter(vendedor_id=vendedor_id, activo=True)

@@ -369,13 +369,14 @@ const q = params.get('q');
 			}}
 			style={{ width: 60, marginBottom: 4, textAlign: 'center' }}
 			disabled={enCarrito || producto.stock === 0}
+			hidden={producto.stock === 0}
 		  />
 		  <AddToCartButton
 			onClick={() => handleAddToCart(producto.id)}
 			added={enCarrito}
 			disabled={enCarrito || producto.stock === 0}
 		  />
-		  {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Sin stock</span>}
+		  {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Agotado</span>}
 		</div>
 	  </div>
 	);

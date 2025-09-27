@@ -14,6 +14,15 @@ const Register = ({ setIsAuthenticated, setEsVendedor }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const passwordRequirements = [
+    { label: 'Al menos 8 caracteres', test: p => p.length >= 8 },
+    { label: 'Una letra mayúscula', test: p => /[A-Z]/.test(p) },
+    { label: 'Una letra minúscula', test: p => /[a-z]/.test(p) },
+    { label: 'Un número', test: p => /[0-9]/.test(p) },
+    { label: 'Un carácter especial', test: p => /[^A-Za-z0-9]/.test(p) },
+  ];
+  const passwordValid = passwordRequirements.every(r => r.test(formData.password));
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -105,8 +114,15 @@ const Register = ({ setIsAuthenticated, setEsVendedor }) => {
             value={formData.password}
             onChange={handleChange}
             required
-            style={{ marginBottom: 18, fontSize: 16, borderRadius: 8, border: '1.5px solid #cfd8dc', padding: '0.9rem', background: '#f7f9fa', outline: 'none', transition: 'border 0.2s' }}
+            style={{ marginBottom: 8, fontSize: 16, borderRadius: 8, border: '1.5px solid #cfd8dc', padding: '0.9rem', background: '#f7f9fa', outline: 'none', transition: 'border 0.2s' }}
           />
+          <ul style={{margin: '0 0 10px 0', padding: '0 0 0 18px', fontSize: 14, color: '#444'}}>
+            {passwordRequirements.map((r, i) => (
+              <li key={i} style={{color: r.test(formData.password) ? '#388e3c' : '#e53935', fontWeight: r.test(formData.password) ? 600 : 400}}>
+                {r.label}
+              </li>
+            ))}
+          </ul>
           <label style={{
             display: 'flex',
             alignItems: 'center',
@@ -145,6 +161,7 @@ const Register = ({ setIsAuthenticated, setEsVendedor }) => {
             onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
             onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            disabled={!passwordValid}
           >Registrarse</button>
         </form>
       </div>

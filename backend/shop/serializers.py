@@ -25,7 +25,7 @@ class ProductoSerializer(serializers.ModelSerializer):
     categoria_id = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.all(), source='categoria', write_only=True, required=False
     )
-    vendedor = serializers.PrimaryKeyRelatedField(read_only=True)
+    vendedor = serializers.SerializerMethodField()
     precio_con_descuento = serializers.SerializerMethodField()
     activo = serializers.BooleanField(default=True)  # <-- Agregado campo activo
 
@@ -36,6 +36,15 @@ class ProductoSerializer(serializers.ModelSerializer):
             'categoria', 'categoria_id', 'subcategoria', 'en_oferta', 'descuento',
             'precio_con_descuento', 'subcategoria_id', 'activo', 'stock'
         ]
+
+    def get_vendedor(self, obj):
+        if obj.vendedor:
+            return {
+                'id': obj.vendedor.id,
+                'username': obj.vendedor.username,
+                'email': obj.vendedor.email
+            }
+        return None
 
     def get_precio_con_descuento(self, obj):
         if obj.en_oferta and obj.descuento > 0:

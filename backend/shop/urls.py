@@ -21,6 +21,7 @@ from .views import (
     ProductosEnOfertaPorCategoriaView,  # <-- nueva vista para ofertas
     GetUserEmailView,
     PasswordResetRequestView,
+    ProductosPorVendedorView,  # <-- nuevo import
 )
 
 urlpatterns = [
@@ -31,6 +32,7 @@ urlpatterns = [
     path('productos/subcategoria/<int:subcategoria_id>/', ProductosPorSubcategoriaView.as_view(), name='productos_por_subcategoria'),  # <-- nuevo endpoint
     path('productos/<int:pk>/', ProductoRetrieveUpdateView.as_view(), name='detalle_producto'),  # <--- agregar
     path('productos/ofertas/categoria/<int:categoria_id>/', ProductosEnOfertaPorCategoriaView.as_view(), name='productos_en_oferta_por_categoria'),  # <-- nuevo endpoint
+    path('productos/vendedor/<int:vendedor_id>/', ProductosPorVendedorView.as_view(), name='productos_por_vendedor'),  # <-- nuevo endpoint
 
     # Recuperación de contraseña y consulta de correo
     path('get-user-email/', GetUserEmailView.as_view(), name='get_user_email'),
