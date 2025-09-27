@@ -42,7 +42,7 @@ function Home() {
   const ofertasCategorias = [
     { id: 1, nombre: 'Tecnología', img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80' },
     { id: 2, nombre: 'Ropa', img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80' },
-    { id: 3, nombre: 'Servicios', img: 'https://www.albaniles.org/wp-content/uploads/2016/08/plomero1.jpg' },
+    { id: 3, nombre: 'Servicios', img: 'https://i.pinimg.com/originals/d5/26/08/d52608769fa7248bc784da40cbf68ec6.jpg' },
     { id: 4, nombre: 'Hogar', img: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80' },
     { id: 5, nombre: 'Deportes', img: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=400&q=80' },
     { id: 6, nombre: 'Libros', img: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80' },
