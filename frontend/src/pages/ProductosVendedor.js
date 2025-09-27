@@ -5,11 +5,16 @@ import '../style/busqueda.css';
 import AddToCartButton from '../components/AddToCartButton';
 import CatBar from '../components/cat';
 
+
+import { toast } from 'react-hot-toast';
+
 const ProductosVendedor = () => {
   const { vendedorId } = useParams();
   const [productos, setProductos] = useState([]);
   const [vendedor, setVendedor] = useState(null);
+  const [carritoIds, setCarritoIds] = useState([]); // ids de productos en carrito
 
+  // Cargar productos del vendedor
   useEffect(() => {
     api.get(`http://localhost:8000/api/productos/vendedor/${vendedorId}/`)
       .then(res => {
@@ -20,6 +25,54 @@ const ProductosVendedor = () => {
       })
       .catch(() => setProductos([]));
   }, [vendedorId]);
+
+  // Cargar productos en carrito del usuario
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch('http://localhost:8000/api/carrito/', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCarritoIds(data.map(item => item.producto?.id || item.producto));
+        }
+      })
+      .catch(() => setCarritoIds([]));
+  }, [vendedorId]);
+
+  // Añadir producto al carrito
+  const handleAddToCart = async (producto) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Debes iniciar sesión');
+      return;
+    }
+    if (!producto) return;
+    if (producto.stock < 1) {
+      toast.error('No hay suficiente stock disponible');
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:8000/api/carrito/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ producto_id: producto.id, cantidad: 1 })
+      });
+      if (res.ok) {
+        toast.success('Producto agregado al carrito');
+        setCarritoIds(ids => [...ids, producto.id]);
+      } else {
+        toast.error('No se pudo agregar al carrito');
+      }
+    } catch {
+      toast.error('Error al conectar con el servidor');
+    }
+  };
 
   return (
     <div className="container">
@@ -75,9 +128,9 @@ const ProductosVendedor = () => {
                 </Link>
                 <div style={{ marginLeft: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <AddToCartButton
-                    onClick={() => {}}
-                    added={false}
-                    disabled={producto.stock === 0}
+                    onClick={() => handleAddToCart(producto)}
+                    added={carritoIds.includes(producto.id)}
+                    disabled={carritoIds.includes(producto.id) || producto.stock === 0}
                   />
                   {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Agotado</span>}
                 </div>
