@@ -250,12 +250,12 @@ const Publicaciones = () => {
                       <span className="stock-edicion">
                         <input
                           type="number"
-                          min={1}
+                          min={0}
                           value={nuevoStock}
                           className="input-stock"
                           onChange={e => {
                             let val = parseInt(e.target.value, 10);
-                            if (isNaN(val) || val < 1) val = 1;
+                            if (isNaN(val) || val < 0) val = 0;
                             setNuevoStock(val);
                           }}
                         />

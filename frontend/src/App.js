@@ -23,6 +23,7 @@ import Configuracion from './pages/Configuracion';
 import Publicaciones from './pages/Publicaciones';
 import EditarPublicacion from './pages/EditarPublicacion'; // Importación añadida
 import ProductoDetalle from './pages/ProductoDetalle'; // Asegúrate de importar ProductoDetalle si no está importado
+import ProductosVendedor from './pages/ProductosVendedor';
 
 function App() {
   // Estado global reactivo
@@ -92,6 +93,8 @@ function App() {
             {/* Perfil y configuración */}
             <Route path="/perfil" element={isAuthenticated ? <Perfil /> : <Navigate to="/iniciar-sesion" replace />} />
             <Route path="/configuracion" element={isAuthenticated ? <Configuracion /> : <Navigate to="/iniciar-sesion" replace />} />
+            {/* Ruta para productos de vendedor */}
+            <Route path="/vendedor/:vendedorId" element={<ProductosVendedor />} />
             {/* Ruta fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

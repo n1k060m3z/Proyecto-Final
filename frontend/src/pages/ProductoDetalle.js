@@ -106,7 +106,17 @@ const ProductoDetalle = () => {
           <b>Ciudad:</b> {producto.ciudad || '-'}
         </div>
         <div style={{ fontSize: 15, color: '#888', marginBottom: 8 }}>
-          <b>Vendedor:</b> {producto.vendedor || '-'}
+          <b>Vendedor:</b>{' '}
+          {producto.vendedor && producto.vendedor.username ? (
+            <a
+              href={`/vendedor/${producto.vendedor.id}`}
+              style={{ color: '#2563eb', textDecoration: 'underline', cursor: 'pointer', fontWeight: 600 }}
+            >
+              {producto.vendedor.username}
+            </a>
+          ) : (
+            '-'
+          )}
         </div>
         <div style={{ marginTop: 24, textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -125,6 +135,7 @@ const ProductoDetalle = () => {
               }}
               style={{ width: 60, textAlign: 'center' }}
               disabled={enCarrito || producto.stock === 0}
+              hidden={producto.stock === 0}
             />
           </div>
           <AddToCartButton
@@ -132,7 +143,7 @@ const ProductoDetalle = () => {
             added={enCarrito}
             disabled={enCarrito || producto.stock === 0}
           />
-          {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Sin stock</span>}
+          {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Agotado</span>}
         </div>
       </div>
     </div>

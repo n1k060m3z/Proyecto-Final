@@ -149,6 +149,15 @@ const CambioPassword = () => {
   const [mensaje, setMensaje] = useState('');
   const [autenticado, setAutenticado] = useState(false);
 
+  const passwordRequirements = [
+    { label: 'Al menos 8 caracteres', test: p => p.length >= 8 },
+    { label: 'Una letra mayúscula', test: p => /[A-Z]/.test(p) },
+    { label: 'Una letra minúscula', test: p => /[a-z]/.test(p) },
+    { label: 'Un número', test: p => /[0-9]/.test(p) },
+    { label: 'Un carácter especial', test: p => /[^A-Za-z0-9]/.test(p) },
+  ];
+  const passwordValid = passwordRequirements.every(r => r.test(nuevaPassword));
+
   const handleVerificar = async e => {
     e.preventDefault();
     // Verificar contraseña actual (puedes crear un endpoint o usar el de perfil con solo password_actual)
@@ -165,6 +174,10 @@ const CambioPassword = () => {
 
   const handleCambioPassword = async e => {
     e.preventDefault();
+    if (!passwordValid) {
+      setMensaje('La nueva contraseña no cumple con los requisitos de seguridad.');
+      return;
+    }
     try {
       await api.patch('http://localhost:8000/api/perfil/', { password: nuevaPassword, password_actual: passwordActual }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -194,8 +207,15 @@ const CambioPassword = () => {
           <div className="mb-4">
             <label className="block mb-1 font-semibold">Nueva contraseña</label>
             <input name="nuevaPassword" type="password" value={nuevaPassword} onChange={e => setNuevaPassword(e.target.value)} className="w-full border rounded px-3 py-2" required />
+            <ul style={{margin: '0 0 10px 0', padding: '0 0 0 18px', fontSize: 14, color: '#444'}}>
+              {passwordRequirements.map((r, i) => (
+                <li key={i} style={{color: r.test(nuevaPassword) ? '#388e3c' : '#e53935', fontWeight: r.test(nuevaPassword) ? 600 : 400}}>
+                  {r.label}
+                </li>
+              ))}
+            </ul>
           </div>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" type="submit">Cambiar contraseña</button>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" type="submit" disabled={!passwordValid}>Cambiar contraseña</button>
         </form>
       )}
       {mensaje && <div className="mt-4 text-green-600">{mensaje}</div>}
