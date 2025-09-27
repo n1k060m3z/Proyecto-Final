@@ -1,3 +1,44 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Usuario
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+from django.conf import settings
+
+class GetUserEmailView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        if not username:
+            return Response({'error': 'Nombre de usuario requerido'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = Usuario.objects.get(username=username)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'email': user.email}, status=status.HTTP_200_OK)
+
+class PasswordResetRequestView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        if not username:
+            return Response({'error': 'Nombre de usuario requerido'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = Usuario.objects.get(username=username)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        # Generar token simple
+        token = get_random_string(32)
+        user.reset_token = token
+        user.save()
+        reset_url = f"http://localhost:3000/reset-password/{token}/"
+        send_mail(
+            'Recuperación de contraseña',
+            f'Hola {user.username}, para recuperar tu contraseña haz clic en el siguiente enlace: {reset_url}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+        return Response({'message': 'Correo de recuperación enviado'}, status=status.HTTP_200_OK)
 # --- Vista para obtener el detalle de un producto por ID ---
 from rest_framework import generics
 

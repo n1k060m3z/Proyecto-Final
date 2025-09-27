@@ -19,6 +19,8 @@ from .views import (
     MisPublicacionesView,
     ProductoRetrieveUpdateView,  # <--- agregar
     ProductosEnOfertaPorCategoriaView,  # <-- nueva vista para ofertas
+    GetUserEmailView,
+    PasswordResetRequestView,
 )
 
 urlpatterns = [
@@ -29,6 +31,10 @@ urlpatterns = [
     path('productos/subcategoria/<int:subcategoria_id>/', ProductosPorSubcategoriaView.as_view(), name='productos_por_subcategoria'),  # <-- nuevo endpoint
     path('productos/<int:pk>/', ProductoRetrieveUpdateView.as_view(), name='detalle_producto'),  # <--- agregar
     path('productos/ofertas/categoria/<int:categoria_id>/', ProductosEnOfertaPorCategoriaView.as_view(), name='productos_en_oferta_por_categoria'),  # <-- nuevo endpoint
+
+    # Recuperación de contraseña y consulta de correo
+    path('get-user-email/', GetUserEmailView.as_view(), name='get_user_email'),
+    path('password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
 
     # Autenticación y registro
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

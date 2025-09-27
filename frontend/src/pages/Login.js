@@ -6,37 +6,90 @@ import '../App.css';
 function Login({ setIsAuthenticated, setEsVendedor }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showReset, setShowReset] = useState(false);
+  const [resetUsername, setResetUsername] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetStep, setResetStep] = useState(0); // 0: usuario, 1: mostrar correo
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       const res = await fetch('http://localhost:8000/api/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-
       if (!res.ok) {
         toast.error('Usuario o contraseña incorrectos');
         return;
       }
-
       const data = await res.json();
-
-      // Guardar el flag como string 'true' o 'false' para evitar problemas de comparación
       localStorage.setItem('token', data.access);
       localStorage.setItem('usuario', username);
       localStorage.setItem('es_vendedor', data.es_vendedor === true || data.es_vendedor === 'true' ? 'true' : 'false');
       setIsAuthenticated(true);
       setEsVendedor(data.es_vendedor === true || data.es_vendedor === 'true');
       toast.success('Bienvenido');
-      navigate('/'); // Redirigir siempre al inicio
+      navigate('/');
     } catch (err) {
-      console.error(err);
       toast.error('Error al conectar con el servidor');
     }
+  };
+
+  const handleResetUser = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/get-user-email/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: resetUsername })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.email) {
+        toast.error(data.error || 'Usuario no encontrado');
+        setResetLoading(false);
+        return;
+      }
+      setResetEmail(data.email);
+      setResetStep(1);
+    } catch (err) {
+      toast.error('Error al conectar con el servidor');
+    }
+    setResetLoading(false);
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/password-reset/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: resetUsername })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || 'No se pudo enviar el correo');
+        setResetLoading(false);
+        return;
+      }
+      toast.success(`Se enviarán las instrucciones de recuperación al correo: ${resetEmail}`);
+      setTimeout(() => {
+        setShowReset(false);
+        setResetUsername('');
+        setResetEmail('');
+        setResetStep(0);
+        setUsername('');
+        setPassword('');
+        navigate('/iniciar-sesion', { replace: true });
+      }, 1200); // Espera breve para mostrar el mensaje
+    } catch (err) {
+      toast.error('Error al conectar con el servidor');
+    }
+    setResetLoading(false);
   };
 
   return (
@@ -68,43 +121,132 @@ function Login({ setIsAuthenticated, setEsVendedor }) {
           fontSize: 28,
           letterSpacing: 0.5
         }}>Acceso</h2>
-        <form onSubmit={handleLogin} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
-          <input
-            type="text"
-            placeholder="Nombre de usuario"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            required
-            style={{ marginBottom: 16, fontSize: 16, borderRadius: 8, border: '1.5px solid #cfd8dc', padding: '0.9rem', background: '#f7f9fa', outline: 'none', transition: 'border 0.2s' }}
-          />
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            style={{ marginBottom: 18, fontSize: 16, borderRadius: 8, border: '1.5px solid #cfd8dc', padding: '0.9rem', background: '#f7f9fa', outline: 'none', transition: 'border 0.2s' }}
-          />
-          <button type="submit" style={{
-            background: 'linear-gradient(90deg, #ff6a00 60%, #ff9800 100%)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            padding: '0.95rem 0',
-            fontWeight: 700,
-            fontSize: 18,
-            marginTop: 6,
-            marginBottom: 2,
-            boxShadow: '0 2px 8px #ff6a0033',
-            cursor: 'pointer',
-            transition: 'background 0.18s, transform 0.12s',
-            letterSpacing: 0.5
-          }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-          >Entrar</button>
-        </form>
+        {!showReset ? (
+          <form onSubmit={handleLogin} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <input
+              type="text"
+              placeholder="Nombre de usuario"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              required
+              style={{ marginBottom: 16, fontSize: 16, borderRadius: 8, border: '1.5px solid #cfd8dc', padding: '0.9rem', background: '#f7f9fa', outline: 'none', transition: 'border 0.2s' }}
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              style={{ marginBottom: 18, fontSize: 16, borderRadius: 8, border: '1.5px solid #cfd8dc', padding: '0.9rem', background: '#f7f9fa', outline: 'none', transition: 'border 0.2s' }}
+            />
+            <button type="submit" style={{
+              background: 'linear-gradient(90deg, #ff6a00 60%, #ff9800 100%)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              padding: '0.95rem 0',
+              fontWeight: 700,
+              fontSize: 18,
+              marginTop: 6,
+              marginBottom: 2,
+              boxShadow: '0 2px 8px #ff6a0033',
+              cursor: 'pointer',
+              transition: 'background 0.18s, transform 0.12s',
+              letterSpacing: 0.5
+            }}
+              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            >Entrar</button>
+            <button type="button" style={{
+              background: 'none',
+              color: '#2563eb',
+              border: 'none',
+              fontSize: 15,
+              marginTop: 8,
+              cursor: 'pointer',
+              textDecoration: 'underline'
+            }} onClick={() => setShowReset(true)}>
+              Olvidé mi contraseña
+            </button>
+          </form>
+        ) : (
+          resetStep === 0 ? (
+            <form onSubmit={handleResetUser} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <input
+                type="text"
+                placeholder="Nombre de usuario"
+                value={resetUsername}
+                onChange={e => setResetUsername(e.target.value)}
+                required
+                style={{ marginBottom: 16, fontSize: 16, borderRadius: 8, border: '1.5px solid #cfd8dc', padding: '0.9rem', background: '#f7f9fa', outline: 'none', transition: 'border 0.2s' }}
+              />
+              <button type="submit" disabled={resetLoading} style={{
+                background: 'linear-gradient(90deg, #2563eb 60%, #1e40af 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                padding: '0.95rem 0',
+                fontWeight: 700,
+                fontSize: 18,
+                marginTop: 6,
+                marginBottom: 2,
+                boxShadow: '0 2px 8px #2563eb33',
+                cursor: resetLoading ? 'not-allowed' : 'pointer',
+                transition: 'background 0.18s, transform 0.12s',
+                letterSpacing: 0.5
+              }}>
+                {resetLoading ? 'Buscando...' : 'Siguiente'}
+              </button>
+              <button type="button" style={{
+                background: 'none',
+                color: '#ff6a00',
+                border: 'none',
+                fontSize: 15,
+                marginTop: 8,
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }} onClick={() => {setShowReset(false); setResetStep(0); setResetUsername(''); setResetEmail('');}}>
+                Volver al login
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handlePasswordReset} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <div style={{ marginBottom: 16, fontSize: 16, color: '#2563eb', textAlign: 'center' }}>
+                Se enviarán las instrucciones de recuperación al correo:<br />
+                <b>{resetEmail}</b>
+              </div>
+              <button type="submit" disabled={resetLoading} style={{
+                background: 'linear-gradient(90deg, #2563eb 60%, #1e40af 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                padding: '0.95rem 0',
+                fontWeight: 700,
+                fontSize: 18,
+                marginTop: 6,
+                marginBottom: 2,
+                boxShadow: '0 2px 8px #2563eb33',
+                cursor: resetLoading ? 'not-allowed' : 'pointer',
+                transition: 'background 0.18s, transform 0.12s',
+                letterSpacing: 0.5
+              }}>
+                {resetLoading ? 'Enviando...' : 'Enviar recuperación'}
+              </button>
+              <button type="button" style={{
+                background: 'none',
+                color: '#ff6a00',
+                border: 'none',
+                fontSize: 15,
+                marginTop: 8,
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }} onClick={() => {setShowReset(false); setResetStep(0); setResetUsername(''); setResetEmail('');}}>
+                Volver al login
+              </button>
+            </form>
+          )
+        )}
       </div>
     </div>
   );
