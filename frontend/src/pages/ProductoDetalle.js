@@ -3,6 +3,10 @@ import { useParams } from "react-router-dom";
 import api from '../api/axios';
 import AddToCartButton from '../components/AddToCartButton';
 import { toast } from 'react-hot-toast';
+import { getSolicitudesServicio } from '../api/ventas';
+import Modal from '../components/Modal';
+
+const MIN_LENGTH = 3;
 
 const ProductoDetalle = () => {
   const { id } = useParams();
@@ -10,8 +14,35 @@ const ProductoDetalle = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [enCarrito, setEnCarrito] = useState(false);
-  // Verificar si el producto ya está en el carrito
   const [cantidad, setCantidad] = useState(1);
+  const [mensaje, setMensaje] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [fecha, setFecha] = useState('');
+  const [hora, setHora] = useState('08:00');
+  const [perfilDireccion, setPerfilDireccion] = useState(null);
+  const [usarDireccionPerfil, setUsarDireccionPerfil] = useState(true);
+  const [direccionServicio, setDireccionServicio] = useState({ ciudad: '', direccion: '', barrio: '' });
+
+  // Obtener perfil del usuario para sugerir dirección
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    api.get('perfil/', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        setPerfilDireccion({
+          direccion: res.data.direccion || '',
+          ciudad: res.data.ciudad || res.data.city || '',
+          barrio: res.data.barrio || ''
+        });
+        // Si no hay dirección en perfil, forzar ingreso de otra dirección
+        if (!res.data.direccion || !res.data.ciudad) setUsarDireccionPerfil(false);
+      })
+      .catch(() => {
+        setPerfilDireccion(null);
+        setUsarDireccionPerfil(false);
+      });
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !producto) return;
@@ -62,20 +93,54 @@ const ProductoDetalle = () => {
     }
   };
 
+  const solicitarServicio = async (info = null) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Debes iniciar sesión');
+      return;
+    }
+    try {
+      // Construir payload incluyendo dirección: preferir info.direccion si viene, sino usar perfil
+      const payload = {
+        servicio: producto.id,
+        vendedor: producto.vendedor.id,
+        fecha: info ? info.fecha : undefined,
+        hora: info ? info.hora : undefined,
+        detalles: info ? info.mensaje : mensaje,
+        direccion: info ? info.direccion : (perfilDireccion ? perfilDireccion.direccion : undefined),
+        barrio: info ? info.barrio : (perfilDireccion ? perfilDireccion.barrio : undefined),
+        ciudad: info ? info.ciudad : (perfilDireccion ? perfilDireccion.ciudad : undefined),
+      };
+      await api.post('solicitudes-servicio/', payload, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Solicitud de servicio enviada');
+      setMensaje('');
+      setModalOpen(false);
+    } catch (error) {
+      if (error.response && error.response.data) {
+        toast.error('Error: ' + JSON.stringify(error.response.data));
+      } else {
+        toast.error('No se pudo enviar la solicitud');
+      }
+    }
+  };
+
   useEffect(() => {
-    api.get(`http://localhost:8000/api/productos/${id}/`)
-      .then(res => {
+    // Forzar re-fetch del producto y evitar usar datos cacheados por componentes padres
+    const fetchProducto = async () => {
+      try {
+        const res = await api.get(`productos/${id}/`);
         let p = res.data;
         if (p.imagen && p.imagen.startsWith('/media/productos/')) {
           p.imagen = `http://localhost:8000${p.imagen}`;
         }
         setProducto(p);
-        setLoading(false);
-      })
-      .catch(() => {
+      } catch (err) {
         setError('No se pudo cargar el producto');
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchProducto();
   }, [id]);
 
   if (loading) return <div style={{padding: 32}}>Cargando...</div>;
@@ -89,6 +154,11 @@ const ProductoDetalle = () => {
       </div>
       <div style={{ flex: 1 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>{producto.nombre}</h1>
+        {/* Se removieron las estrellas de calificación en la vista de detalle */}
+        <div style={{marginBottom: 16}}>
+          {/* Estrellas removidas; mostrar solo texto si hay reseñas */}
+          <div style={{fontSize:13,color:'#666',marginTop:6}}>{producto.rating_count ? `${producto.rating_count} reseñas` : 'Sin calificaciones'}</div>
+        </div>
         <div style={{ fontSize: 20, color: '#444', fontWeight: 600, marginBottom: 16 }}>
           {producto.precio ? `$ ${Math.floor(producto.precio).toLocaleString()}` : 'Precio a convenir'}
         </div>
@@ -103,7 +173,10 @@ const ProductoDetalle = () => {
           <b>Subcategoría:</b> {producto.subcategoria?.nombre || producto.subcategoria || '-'}
         </div>
         <div style={{ fontSize: 15, color: '#888', marginBottom: 8 }}>
-          <b>Ciudad:</b> {producto.ciudad || '-'}
+          <b>Ciudad:</b> {(() => {
+            console.log('DEBUG ciudad_vendedor:', producto.ciudad_vendedor, 'ciudad:', producto.ciudad, 'producto:', producto);
+            return producto.ciudad_vendedor || producto.ciudad || '-';
+          })()}
         </div>
         <div style={{ fontSize: 15, color: '#888', marginBottom: 8 }}>
           <b>Vendedor:</b>{' '}
@@ -119,6 +192,74 @@ const ProductoDetalle = () => {
           )}
         </div>
         <div style={{ marginTop: 24, textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+          {/* Mostrar botón de solicitar servicio solo si es de tipo servicio */}
+          {(
+            (producto.categoria && (
+              (typeof producto.categoria === 'object' && producto.categoria.nombre && producto.categoria.nombre.toLowerCase().includes('servicio')) ||
+              (typeof producto.categoria === 'string' && producto.categoria.toLowerCase().includes('servicio')) ||
+              (typeof producto.categoria === 'number' && producto.categoria === 3)
+            ))
+          ) && (
+            <div style={{width:'100%',marginBottom:12}}>
+              <button onClick={() => setModalOpen(true)} style={{background:'#2563eb',color:'#fff',border:'none',borderRadius:4,padding:'10px 18px',cursor:'pointer'}}>Solicitar servicio</button>
+            </div>
+          )}
+          <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+            <h2>Solicitar servicio</h2>
+            <form onSubmit={e => {
+              e.preventDefault();
+              // Validaciones: fecha no puede ser pasada
+              if (!fecha) { toast.error('Selecciona una fecha'); return; }
+              const hoy = new Date().toISOString().split('T')[0];
+              if (fecha < hoy) { toast.error('La fecha no puede ser pasada'); return; }
+              // Dirección: si no usamos la del perfil, validar campos
+              let direccionPayload = null;
+              if (usarDireccionPerfil) {
+                if (!perfilDireccion || !perfilDireccion.direccion || !perfilDireccion.ciudad || !perfilDireccion.barrio) {
+                  toast.error('Tu perfil no tiene dirección completa. Ingresa una dirección');
+                  return;
+                }
+                direccionPayload = { direccion: perfilDireccion.direccion, ciudad: perfilDireccion.ciudad, barrio: perfilDireccion.barrio };
+              } else {
+                if (!direccionServicio.direccion || direccionServicio.direccion.trim().length < MIN_LENGTH) { toast.error('Dirección inválida'); return; }
+                if (!direccionServicio.ciudad || direccionServicio.ciudad.trim().length < MIN_LENGTH) { toast.error('Ciudad inválida'); return; }
+                if (!direccionServicio.barrio || direccionServicio.barrio.trim().length < MIN_LENGTH) { toast.error('Barrio inválido'); return; }
+                direccionPayload = { ...direccionServicio };
+              }
+              solicitarServicio({ fecha, hora, mensaje, ...direccionPayload });
+            }} style={{display:'flex',flexDirection:'column',gap:12}}>
+              <label>Fecha:
+                <input type="date" min={new Date().toISOString().split('T')[0]} value={fecha} onChange={e => setFecha(e.target.value)} style={{marginLeft:4}} required />
+              </label>
+              <label>Hora:
+                <input type="time" value={hora} onChange={e => setHora(e.target.value)} style={{marginLeft:4}} required />
+              </label>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="radio" checked={usarDireccionPerfil} onChange={() => setUsarDireccionPerfil(true)} /> Usar mi dirección guardada
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="radio" checked={!usarDireccionPerfil} onChange={() => setUsarDireccionPerfil(false)} /> Ingresar otra dirección
+                </label>
+              </div>
+              {!usarDireccionPerfil && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <input placeholder="Ciudad" value={direccionServicio.ciudad} onChange={e => setDireccionServicio(s => ({ ...s, ciudad: e.target.value }))} className="input" />
+                  <input placeholder="Dirección" value={direccionServicio.direccion} onChange={e => setDireccionServicio(s => ({ ...s, direccion: e.target.value }))} className="input" />
+                  <input placeholder="Barrio" value={direccionServicio.barrio} onChange={e => setDireccionServicio(s => ({ ...s, barrio: e.target.value }))} className="input" />
+                </div>
+              )}
+              <label>Detalles:
+                <textarea
+                  placeholder="Mensaje para el vendedor (opcional)"
+                  value={mensaje}
+                  onChange={e => setMensaje(e.target.value)}
+                  style={{width:'100%',minHeight:60,padding:8,borderRadius:4,border:'1px solid #ccc'}}
+                />
+              </label>
+              <button type="submit" style={{background:'#2563eb',color:'#fff',border:'none',borderRadius:4,padding:'10px 18px',cursor:'pointer'}}>Enviar solicitud</button>
+            </form>
+          </Modal>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <label htmlFor="cantidad-input-detalle" style={{ fontSize: 13, color: '#555', marginBottom: 2 }}>Cantidad</label>
             <input
@@ -138,12 +279,15 @@ const ProductoDetalle = () => {
               hidden={producto.stock === 0}
             />
           </div>
-          <AddToCartButton
-            onClick={handleAddToCart}
-            added={enCarrito}
-            disabled={enCarrito || producto.stock === 0}
-          />
-          {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Agotado</span>}
+          {/* Ocultar botón de carrito si es un servicio */}
+          {!(producto && producto.categoria && (producto.categoria.nombre === 'Servicios' || producto.categoria === 'Servicios')) && (
+            <AddToCartButton
+              onClick={handleAddToCart}
+              added={enCarrito}
+              disabled={enCarrito || (producto && producto.stock === 0)}
+            />
+          )}
+          {producto && producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Agotado</span>}
         </div>
       </div>
     </div>

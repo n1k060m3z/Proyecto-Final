@@ -168,142 +168,147 @@ const Publicaciones = () => {
       </div>
       <div className="publicaciones-list-scroll">
         <div className="publicaciones-list">
-          {productos.map(producto => (
-            <div
-              key={producto.id}
-              className={`publicacion-item-card${seleccionados.includes(producto.id) ? ' seleccionada' : ''}`}
-              onClick={e => {
-                // Evitar que el click en el menú contextual o botones internos seleccione
-                if (
-                  e.target.closest('.publicacion-menu-btn') ||
-                  e.target.closest('.menu-acciones-publicacion') ||
-                  e.target.closest('button') ||
-                  e.target.closest('input')
-                ) return;
-                toggleSeleccion(producto.id);
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="publicacion-item-content">
-                <div className="publicacion-item-left">
-                  {/* Checkbox eliminado, solo imagen */}
-                  <img src={producto.imagen ? `http://localhost:8000${producto.imagen}` : 'https://via.placeholder.com/60'} alt={producto.nombre} />
-                </div>
-                <div className="publicacion-info">
-                  <div className="publicacion-nombre">{producto.nombre}</div>
-                  <div className="publicacion-descripcion">{producto.descripcion}</div>
-                  <div className="publicacion-precio">${producto.precio}</div>
-                  <div className="publicacion-oferta" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0' }}>
-                    {producto.en_oferta ? (
-                      <>
-                        <span style={{ color: '#388e3c', fontWeight: 600 }}>
-                          En oferta ({producto.descuento}% desc.)
-                        </span>
-                        <button
-                          className="btn-oferta quitar"
-                          onClick={async () => {
-                            await api.patch(`productos/${producto.id}/`, { en_oferta: false }, {
-                              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                            });
-                            recargarProductos();
-                          }}
-                          title="Quitar oferta"
-                        ><i className="fa fa-times" style={{marginRight:4}}/>Quitar</button>
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={producto.descuento}
-                          className="input-descuento"
-                          onChange={async e => {
-                            let val = parseInt(e.target.value, 10);
-                            if (isNaN(val) || val < 0) val = 0;
-                            if (val > 100) val = 100;
-                            await api.patch(`productos/${producto.id}/`, { descuento: val }, {
-                              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                            });
-                            recargarProductos();
-                          }}
-                          title="Editar descuento"
-                        />
-                        <span style={{ fontSize: 13, color: '#888' }}>%</span>
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ color: '#888' }}>Sin oferta</span>
-                        <button
-                          className="btn-oferta poner"
-                          onClick={async () => {
-                            await api.patch(`productos/${producto.id}/`, { en_oferta: true, descuento: 10 }, {
-                              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                            });
-                            recargarProductos();
-                          }}
-                          title="Poner en oferta"
-                        ><i className="fa fa-tag" style={{marginRight:4}}/>Poner en oferta</button>
-                      </>
-                    )}
+          {productos.map(producto => {
+            const imagenSrc = producto.imagen
+              ? (producto.imagen.startsWith('http') ? producto.imagen : `http://localhost:8000${producto.imagen}`)
+              : 'https://via.placeholder.com/60';
+            return (
+              <div
+                key={producto.id}
+                className={`publicacion-item-card${seleccionados.includes(producto.id) ? ' seleccionada' : ''}`}
+                onClick={e => {
+                  // Evitar que el click en el menú contextual o botones internos seleccione
+                  if (
+                    e.target.closest('.publicacion-menu-btn') ||
+                    e.target.closest('.menu-acciones-publicacion') ||
+                    e.target.closest('button') ||
+                    e.target.closest('input')
+                  ) return;
+                  toggleSeleccion(producto.id);
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="publicacion-item-content">
+                  <div className="publicacion-item-left">
+                    {/* Checkbox eliminado, solo imagen */}
+                    <img src={imagenSrc} alt={producto.nombre} />
                   </div>
-                  <div className="gestion-cantidad">
-                    <b>Stock:</b> <span className="stock-num">{producto.stock}</span>
-                    {editandoStock === producto.id ? (
-                      <span className="stock-edicion">
-                        <input
-                          type="number"
-                          min={0}
-                          value={nuevoStock}
-                          className="input-stock"
-                          onChange={e => {
-                            let val = parseInt(e.target.value, 10);
-                            if (isNaN(val) || val < 0) val = 0;
-                            setNuevoStock(val);
-                          }}
-                        />
-                        <button
-                          className="btn-stock guardar"
-                          onClick={async () => {
-                            await api.patch(`productos/${producto.id}/`, { stock: nuevoStock }, {
-                              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                            });
-                            setEditandoStock(null);
-                            recargarProductos();
-                          }}
-                        ><i className="fa fa-check"/></button>
-                        <button className="btn-stock cancelar" onClick={() => setEditandoStock(null)}><i className="fa fa-times"/></button>
+                  <div className="publicacion-info">
+                    <div className="publicacion-nombre">{producto.nombre}</div>
+                    <div className="publicacion-descripcion">{producto.descripcion}</div>
+                    <div className="publicacion-precio">${producto.precio}</div>
+                    <div className="publicacion-oferta" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0' }}>
+                      {producto.en_oferta ? (
+                        <>
+                          <span style={{ color: '#388e3c', fontWeight: 600 }}>
+                            En oferta ({producto.descuento}% desc.)
+                          </span>
+                          <button
+                            className="btn-oferta quitar"
+                            onClick={async () => {
+                              await api.patch(`productos/${producto.id}/`, { en_oferta: false }, {
+                                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                              });
+                              recargarProductos();
+                            }}
+                            title="Quitar oferta"
+                          ><i className="fa fa-times" style={{marginRight:4}}/>Quitar</button>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={producto.descuento}
+                            className="input-descuento"
+                            onChange={async e => {
+                              let val = parseInt(e.target.value, 10);
+                              if (isNaN(val) || val < 0) val = 0;
+                              if (val > 100) val = 100;
+                              await api.patch(`productos/${producto.id}/`, { descuento: val }, {
+                                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                              });
+                              recargarProductos();
+                            }}
+                            title="Editar descuento"
+                          />
+                          <span style={{ fontSize: 13, color: '#888' }}>%</span>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ color: '#888' }}>Sin oferta</span>
+                          <button
+                            className="btn-oferta poner"
+                            onClick={async () => {
+                              await api.patch(`productos/${producto.id}/`, { en_oferta: true, descuento: 10 }, {
+                                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                              });
+                              recargarProductos();
+                            }}
+                            title="Poner en oferta"
+                          ><i className="fa fa-tag" style={{marginRight:4}}/>Poner en oferta</button>
+                        </>
+                      )}
+                    </div>
+                    <div className="gestion-cantidad">
+                      <b>Stock:</b> <span className="stock-num">{producto.stock}</span>
+                      {editandoStock === producto.id ? (
+                        <span className="stock-edicion">
+                          <input
+                            type="number"
+                            min={0}
+                            value={nuevoStock}
+                            className="input-stock"
+                            onChange={e => {
+                              let val = parseInt(e.target.value, 10);
+                              if (isNaN(val) || val < 0) val = 0;
+                              setNuevoStock(val);
+                            }}
+                          />
+                          <button
+                            className="btn-stock guardar"
+                            onClick={async () => {
+                              await api.patch(`productos/${producto.id}/`, { stock: nuevoStock }, {
+                                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                              });
+                              setEditandoStock(null);
+                              recargarProductos();
+                            }}
+                          ><i className="fa fa-check"/></button>
+                          <button className="btn-stock cancelar" onClick={() => setEditandoStock(null)}><i className="fa fa-times"/></button>
+                        </span>
+                      ) : (
+                        <button className="btn-stock editar" onClick={() => { setEditandoStock(producto.id); setNuevoStock(producto.stock || 1); }} title="Editar stock"><i className="fa fa-edit"/></button>
+                      )}
+                    </div>
+                    {producto.activo ? (
+                      <span className="publicacion-estado activo">
+                        ● Activo
                       </span>
                     ) : (
-                      <button className="btn-stock editar" onClick={() => { setEditandoStock(producto.id); setNuevoStock(producto.stock || 1); }} title="Editar stock"><i className="fa fa-edit"/></button>
+                      <span className="publicacion-estado pausado">
+                        ● Pausado
+                      </span>
                     )}
                   </div>
-                  {producto.activo ? (
-                    <span className="publicacion-estado activo">
-                      ● Activo
-                    </span>
-                  ) : (
-                    <span className="publicacion-estado pausado">
-                      ● Pausado
-                    </span>
+                  <button className="publicacion-menu-btn" onClick={e => { setMenuAccion(producto.id); setAnchorMenu(e.target); }}>⋮</button>
+                  {menuAccion === producto.id && (
+                    <div className="menu-acciones-publicacion">
+                      {acciones.map(a => (
+                        <div key={a.value} className="accion-menu-item" onClick={() => handleAccion(a.label, producto)}>
+                          <i className={
+                            a.value === 'modificar' ? 'fa fa-edit' :
+                            a.value === 'precios' ? 'fa fa-dollar-sign' :
+                            a.value === 'stock' ? 'fa fa-boxes' :
+                            a.value === 'oferta' ? 'fa fa-tag' :
+                            a.value === 'ver' ? 'fa fa-eye' : ''
+                          } style={{marginRight:8}}/>{a.label}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-                <button className="publicacion-menu-btn" onClick={e => { setMenuAccion(producto.id); setAnchorMenu(e.target); }}>⋮</button>
-                {menuAccion === producto.id && (
-                  <div className="menu-acciones-publicacion">
-                    {acciones.map(a => (
-                      <div key={a.value} className="accion-menu-item" onClick={() => handleAccion(a.label, producto)}>
-                        <i className={
-                          a.value === 'modificar' ? 'fa fa-edit' :
-                          a.value === 'precios' ? 'fa fa-dollar-sign' :
-                          a.value === 'stock' ? 'fa fa-boxes' :
-                          a.value === 'oferta' ? 'fa fa-tag' :
-                          a.value === 'ver' ? 'fa fa-eye' : ''
-                        } style={{marginRight:8}}/>{a.label}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

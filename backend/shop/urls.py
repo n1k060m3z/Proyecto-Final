@@ -8,6 +8,7 @@ from .views import (
     CarritoListCreateView,
     CarritoUpdateDeleteView,
     PedidoCreateView,
+    PedidoListView,  # <-- nuevo import para listar pedidos
     ProductosPorCategoriaView,
     ProductosPorSubcategoriaView,  # <-- nueva vista
     CategoriaListView,
@@ -22,7 +23,15 @@ from .views import (
     GetUserEmailView,
     PasswordResetRequestView,
     ProductosPorVendedorView,  # <-- nuevo import
+    UsuarioPublicoView,  # <-- nuevo import para el perfil público de usuario
+    CityListView,  # <-- nuevo import para listar ciudades
+    MarcarPedidoItemEnviadoView,  # <-- nuevo import para marcar pedido item como enviado
+    PedidoClienteListView,  # <-- nuevo import para listar pedidos del comprador
+    CalificacionView,  # <-- nuevo import para crear calificaciones
+    CalificacionListView,  # <-- nuevo import para listar calificaciones
+    VendedorRatingView,  # <-- nuevo import para el rating del vendedor
 )
+from .views_solicitud_servicio import SolicitudServicioListCreateView, SolicitudServicioUpdateView
 
 urlpatterns = [
     # Productos
@@ -48,7 +57,11 @@ urlpatterns = [
 
     # Pedidos
     path('pedido/', PedidoCreateView.as_view(), name='crear-pedido'),
+    path('pedido/list/', PedidoListView.as_view(), name='pedido-list'),  # <-- ahora GET para listar pedidos
+    path('pedido/cliente/', PedidoClienteListView.as_view(), name='pedido-cliente'),  # Pedido del comprador
 
+    # Marcar producto como enviado
+    path('pedido-item/<int:item_id>/enviar/', MarcarPedidoItemEnviadoView.as_view(), name='marcar_pedidoitem_enviado'),
 
     # Categorías
     path('categorias/', CategoriaListView.as_view(), name='listar_categorias'),
@@ -64,4 +77,19 @@ urlpatterns = [
 
     # Publicaciones del vendedor
     path('mis-publicaciones/', MisPublicacionesView.as_view(), name='mis_publicaciones'),
+
+    # Solicitudes de servicios
+    path('solicitudes-servicio/', SolicitudServicioListCreateView.as_view(), name='solicitudes_servicio'),
+    path('solicitudes-servicio/<int:pk>/', SolicitudServicioUpdateView.as_view(), name='solicitud_servicio_update'),
+
+    # Perfil público de usuario
+    path('usuarios/publico/<int:usuario_id>/', UsuarioPublicoView.as_view(), name='usuario_publico'),
+    # Rating del vendedor
+    path('usuarios/<int:vendedor_id>/rating/', VendedorRatingView.as_view(), name='vendedor_rating'),
+    # Ciudades
+    path('ciudades/', CityListView.as_view(), name='listar_ciudades'),
+
+    # Calificaciones
+    path('calificaciones/', CalificacionView.as_view(), name='calificacion-crear'),
+    path('calificaciones/mis/', CalificacionListView.as_view(), name='calificacion-list'),
 ]
