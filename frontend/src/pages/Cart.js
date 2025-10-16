@@ -242,6 +242,8 @@ function Cart() {
 
   // Navegar al flujo de checkout anidado
   const finalizarCompra = () => {
+    // Guardar los productos seleccionados en localStorage para el flujo de checkout
+    localStorage.setItem('carrito', JSON.stringify(selectedItems));
     navigate('/checkout/envio');
   };
 

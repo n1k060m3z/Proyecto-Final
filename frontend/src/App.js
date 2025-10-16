@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Login from './pages/Login';
@@ -24,17 +24,57 @@ import Publicaciones from './pages/Publicaciones';
 import EditarPublicacion from './pages/EditarPublicacion'; // Importación añadida
 import ProductoDetalle from './pages/ProductoDetalle'; // Asegúrate de importar ProductoDetalle si no está importado
 import ProductosVendedor from './pages/ProductosVendedor';
+import { calcularNotificaciones } from './api/notificaciones';
+import Estrellas from './components/Estrellas';
 
 function App() {
   // Estado global reactivo
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [esVendedor, setEsVendedor] = useState(localStorage.getItem('es_vendedor') === 'true' || localStorage.getItem('es_vendedor') === true);
+  const [notifs, setNotifs] = useState({ perfil: false, compras: false, ventas: false });
+  const notifsRef = useRef(notifs);
+  notifsRef.current = notifs;
+
+  // Función para actualizar notificaciones desde Perfil (memorizada)
+  const handleSetNotifs = useCallback(n => {
+    setNotifs(n);
+    notifsRef.current = n;
+  }, []);
+
+  // Hook para obtener la ubicación actual
+  const location = window.location;
+
+  // Calcular notificaciones globales al montar la app y cada vez que cambie la ruta o el token
+  useEffect(() => {
+    async function actualizarNotifs() {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await fetch('http://localhost:8000/api/perfil/', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!res.ok) return;
+          const usuario = await res.json();
+          const n = await calcularNotificaciones(usuario);
+          console.log('DEBUG notifs calculadas:', n, 'usuario:', usuario);
+          setNotifs(n);
+          notifsRef.current = n;
+        } catch (e) {
+          console.log('DEBUG error notifs:', e);
+        }
+      } else {
+        setNotifs({ perfil: false, compras: false, ventas: false });
+        notifsRef.current = { perfil: false, compras: false, ventas: false };
+      }
+    }
+    actualizarNotifs();
+  }, [window.location.pathname, localStorage.getItem('token')]);
 
   console.log('isAuthenticated:', isAuthenticated, 'esVendedor:', esVendedor, 'token:', localStorage.getItem('token'));
 
   return (
     <Router>
-      <Navbar isAuthenticated={isAuthenticated} esVendedor={esVendedor} setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} />
+      <Navbar isAuthenticated={isAuthenticated} esVendedor={esVendedor} setIsAuthenticated={setIsAuthenticated} setEsVendedor={setEsVendedor} notifs={notifs} notifGlobal={notifs.perfil || notifs.compras || notifs.ventas} />
       <Toaster position="top-center" reverseOrder={false} />
       <div className="App">
         <div className="main-content">
@@ -91,7 +131,7 @@ function App() {
             {/* Detalle de producto */}
             <Route path="/producto/:id" element={<ProductoDetalle />} />
             {/* Perfil y configuración */}
-            <Route path="/perfil" element={isAuthenticated ? <Perfil /> : <Navigate to="/iniciar-sesion" replace />} />
+            <Route path="/perfil" element={isAuthenticated ? <Perfil setNotifs={handleSetNotifs} /> : <Navigate to="/iniciar-sesion" replace />} />
             <Route path="/configuracion" element={isAuthenticated ? <Configuracion /> : <Navigate to="/iniciar-sesion" replace />} />
             {/* Ruta para productos de vendedor */}
             <Route path="/vendedor/:vendedorId" element={<ProductosVendedor />} />

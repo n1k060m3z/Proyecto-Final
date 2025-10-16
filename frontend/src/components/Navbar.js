@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
+import { IoMdNotifications } from "react-icons/io";
 import './style/navbar-new.css';
 
-export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated, setEsVendedor }) {
+export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated, setEsVendedor, notifs, notifGlobal }) {
   const [usuario, setUsuario] = useState(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const location = useLocation();
@@ -14,6 +15,10 @@ export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated
     setUsuario(nombreGuardado);
     setMenuAbierto(false);
   }, [location, isAuthenticated]);
+
+  useEffect(() => {
+    console.log('DEBUG Navbar notifs:', notifs);
+  }, [notifs]);
 
   const handleLogout = () => {
     localStorage.removeItem('usuario');
@@ -67,9 +72,12 @@ export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated
             <button
               onClick={() => setMenuAbierto(!menuAbierto)}
               className="user-btn hover:underline focus:outline-none"
+              style={{display:'flex',alignItems:'center',gap:6}}
             >
               <FaUserCircle className="text-2xl" />
               <span>{usuario}</span>
+              {/* Mostrar icono de campana si hay notificación global */}
+              {notifGlobal && <IoMdNotifications style={{ color: '#ff0', fontSize: 22, marginLeft: 4, verticalAlign: 'middle' }} />}
             </button>
 
             {menuAbierto && (
@@ -77,6 +85,7 @@ export default function Navbar({ isAuthenticated, esVendedor, setIsAuthenticated
                 <Link
                   to="/perfil"
                   onClick={() => setMenuAbierto(false)}
+                  style={{display:'flex',alignItems:'center',gap:6}}
                 >
                   Mi perfil
                 </Link>
