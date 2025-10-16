@@ -5,6 +5,10 @@ from .models import Usuario
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
 from django.conf import settings
+from .models import City
+import logging
+from .models import Subcategoria, Categoria, Producto, CarritoItem, Carrito, Pedido, PedidoItem, Usuario, SolicitudServicio, Calificacion
+from django.db.models import Q, Avg, Count
 
 class GetUserEmailView(APIView):
     def post(self, request):
@@ -116,7 +120,7 @@ class ProductoListView(APIView):
         else:
             # Si es cliente o no autenticado, solo productos activos
             productos = Producto.objects.filter(activo=True)
-        serializer = ProductoSerializer(productos, many=True)
+        serializer = ProductoSerializer(productos, many=True, context={'request': request})
         return Response(serializer.data)
 
 # --- Vista privada para crear productos (solo vendedores autenticados) ---
@@ -131,8 +135,10 @@ class ProductoCreateView(APIView):
             )
         serializer = ProductoSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(vendedor=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # Asignar ciudad del usuario automáticamente
+            ciudad_usuario = request.user.city
+            producto = serializer.save(vendedor=request.user, ciudad=ciudad_usuario)
+            return Response(ProductoSerializer(producto, context={'request': request}).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # --- Vista para registrar nuevos usuarios ---
@@ -202,16 +208,58 @@ class PedidoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        logger = logging.getLogger('django')
         usuario = request.user
+        logger.warning(f"[PedidoCreateView] Usuario autenticado: {usuario} (is_authenticated={getattr(usuario, 'is_authenticated', False)}) payload={request.data}")
+
         carrito = Carrito.objects.filter(usuario=usuario).first()
-        ids = request.data.get('items')
+
+        # Obtener ids de forma robusta (acepta: {items: [...]}, {ids: [...]}, lista directa, o string JSON)
+        ids = None
+        data = request.data
+        try:
+            if isinstance(data, list):
+                ids = data
+            else:
+                # Try common keys
+                ids = data.get('items') if hasattr(data, 'get') else None
+                if ids is None:
+                    ids = data.get('ids') if hasattr(data, 'get') else None
+                # Si viene como QueryDict con getlist
+                if not ids and hasattr(data, 'getlist'):
+                    ids_list = data.getlist('items')
+                    if ids_list:
+                        ids = ids_list
+                # Si viene como string JSON, intentar parsear
+                if isinstance(ids, str):
+                    import json
+                    try:
+                        ids = json.loads(ids)
+                    except Exception:
+                        # intentar como lista separada por comas
+                        ids = [x.strip() for x in ids.split(',') if x.strip()]
+        except Exception as e:
+            logger.warning(f"[PedidoCreateView] Error al procesar payload: {e}")
+            ids = None
+
         if not carrito or not carrito.items.exists():
             return Response({'error': 'El carrito está vacío'}, status=status.HTTP_400_BAD_REQUEST)
-        if not ids or not isinstance(ids, list):
+
+        if not ids or not isinstance(ids, (list, tuple)):
+            logger.warning(f"[PedidoCreateView] IDs inválidos o no enviados: {ids}")
             return Response({'error': 'No se seleccionaron productos'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convertir a enteros cuando sea posible
+        try:
+            ids = [int(i) for i in ids]
+        except Exception:
+            return Response({'error': 'IDs de items inválidos'}, status=status.HTTP_400_BAD_REQUEST)
+
         items = carrito.items.filter(id__in=ids)
         if not items.exists():
+            logger.warning(f"[PedidoCreateView] No se encontraron items en el carrito para los IDs solicitados. solicitados={ids} existentes={[i.id for i in carrito.items.all()]}")
             return Response({'error': 'No se encontraron productos seleccionados'}, status=status.HTTP_400_BAD_REQUEST)
+
         total = sum(item.producto.precio * item.cantidad for item in items)
         pedido = Pedido.objects.create(usuario=usuario, total=total)
         for item in items:
@@ -304,7 +352,7 @@ class MisPublicacionesView(APIView):
 
     def get(self, request):
         productos = Producto.objects.filter(vendedor=request.user)
-        serializer = ProductoSerializer(productos, many=True)
+        serializer = ProductoSerializer(productos, many=True, context={'request': request})
         return Response(serializer.data)
 
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
@@ -365,3 +413,226 @@ class ProductosPorVendedorView(generics.ListAPIView):
     def get_queryset(self):
         vendedor_id = self.kwargs.get('vendedor_id')
         return Producto.objects.filter(vendedor_id=vendedor_id, activo=True)
+from .serializers import UsuarioPublicoSerializer
+
+# --- Vista pública para obtener datos públicos de un usuario por ID ---
+class UsuarioPublicoView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, usuario_id):
+        try:
+            user = Usuario.objects.get(id=usuario_id)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UsuarioPublicoSerializer(user)
+        return Response(serializer.data)
+from .serializers import CitySerializer
+
+# --- Vista para listar todas las ciudades de Colombia ---
+class CityListView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        cities = City.objects.filter(country='CO').order_by('name')
+        serializer = CitySerializer(cities, many=True)
+        return Response(serializer.data)
+from .models import PedidoItem
+from .serializers import PedidoItemSerializer
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+class MarcarPedidoItemEnviadoView(APIView):
+    permission_classes = [IsAuthenticated]
+    def patch(self, request, item_id):
+        try:
+            item = PedidoItem.objects.get(id=item_id)
+        except PedidoItem.DoesNotExist:
+            return Response({'error': 'No existe el item'}, status=status.HTTP_404_NOT_FOUND)
+        # Solo el vendedor del producto puede marcar como enviado
+        if item.producto.vendedor != request.user:
+            return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
+        item.enviado = True
+        item.save()
+        # Intentar notificar por correo al comprador si tiene email
+        try:
+            if item.pedido and item.pedido.usuario and item.pedido.usuario.email:
+                send_mail(
+                    'Tu pedido fue enviado',
+                    f'Hola {item.pedido.usuario.username},\n\nEl vendedor ha marcado como enviado el producto: {item.producto.nombre}.\nPronto recibirás la entrega.\n\nSaludos,\nFourShop',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [item.pedido.usuario.email],
+                    fail_silently=True,
+                )
+        except Exception:
+            pass
+        # Devolver el item actualizado con contexto para que la imagen incluya URL absoluto
+        return Response(PedidoItemSerializer(item, context={'request': request}).data)
+
+from .models import Pedido, PedidoItem
+from .serializers import PedidoSerializer
+
+class PedidoListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        logger = logging.getLogger('django')
+        todos_pedidos = Pedido.objects.all().order_by('-creado')
+        logger.warning(f"[PedidoListView-DEBUG] Total pedidos en BD: {todos_pedidos.count()}")
+        for p in todos_pedidos:
+            logger.warning(f"[PedidoListView-DEBUG] Pedido {p.id}: usuario={p.usuario.username} (ID: {p.usuario.id}), creado={p.creado}, total={p.total}")
+            for item in p.items.all():
+                logger.warning(f"[PedidoListView-DEBUG]   Item {item.id}: producto={item.producto.nombre}, vendedor={item.producto.vendedor.username} (ID: {item.producto.vendedor.id}), cantidad={item.cantidad}, enviado={item.enviado}")
+        pedidos = Pedido.objects.filter(items__producto__vendedor=request.user).distinct().order_by('-creado')
+        logger.warning(f"[PedidoListView] Usuario autenticado: {request.user} (ID: {request.user.id})")
+        logger.warning(f"[PedidoListView] Pedidos encontrados: {[p.id for p in pedidos]}")
+        for p in pedidos:
+            items = p.items.filter(producto__vendedor=request.user)
+            logger.warning(f"[PedidoListView] Pedido {p.id} tiene {items.count()} items del vendedor {request.user.id}")
+            for item in items:
+                logger.warning(f"[PedidoListView]   Item {item.id}: producto={item.producto.nombre}, vendedor={item.producto.vendedor.id}, enviado={item.enviado}")
+        pedidos = [p for p in pedidos if p.items.filter(producto__vendedor=request.user).exists()]
+        serializer = PedidoSerializer(pedidos, many=True, context={'request': request})
+        return Response(serializer.data)
+
+# --- Vista para obtener pedidos del comprador ---
+class PedidoClienteListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Devolver los pedidos del usuario autenticado (comprador)
+        pedidos = Pedido.objects.filter(usuario=request.user).order_by('-creado')
+        serializer = PedidoSerializer(pedidos, many=True, context={'request': request})
+        return Response(serializer.data)
+
+from .serializers import CalificacionSerializer
+
+class CalificacionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from django.db import transaction, IntegrityError
+        data = request.data.copy()
+        data['usuario'] = request.user.id
+        # usar partial=True para permitir campos opcionales
+        serializer = CalificacionSerializer(data=data, partial=True)
+        if serializer.is_valid():
+            producto = serializer.validated_data.get('producto')
+            solicitud = serializer.validated_data.get('solicitud_servicio')
+            pedido_item = serializer.validated_data.get('pedido_item')
+
+            # No permitir que envíen combinaciones inválidas
+            targets = [bool(producto), bool(solicitud), bool(pedido_item)]
+            if sum(targets) != 1:
+                return Response({'error': 'Envía exactamente uno de los campos: producto, pedido_item o solicitud_servicio.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validaciones previas: que el usuario pueda calificar
+            if producto:
+                # Si se envía producto directamente sin pedido_item, requerir que exista al menos un pedido del usuario con ese producto
+                if not PedidoItem.objects.filter(pedido__usuario=request.user, producto=producto).exists():
+                    return Response({'error': 'No puedes calificar un producto que no compraste'}, status=status.HTTP_400_BAD_REQUEST)
+                # Revisar duplicado para calificación global por producto (cuando no se asocia a pedido_item)
+                existe_global = Calificacion.objects.filter(usuario=request.user, producto=producto, pedido_item__isnull=True).exists()
+                if existe_global:
+                    return Response({'error': 'Ya has calificado este producto'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if pedido_item:
+                # verificar que el pedido_item exista y pertenezca al usuario
+                if pedido_item.pedido.usuario != request.user:
+                    return Response({'error': 'No puedes calificar una compra que no es tuya'}, status=status.HTTP_403_FORBIDDEN)
+                existe = Calificacion.objects.filter(usuario=request.user, pedido_item=pedido_item).exists()
+                if existe:
+                    return Response({'error': 'Ya has calificado este pedido/item'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if solicitud:
+                try:
+                    solicitud_obj = SolicitudServicio.objects.get(id=solicitud.id)
+                except SolicitudServicio.DoesNotExist:
+                    return Response({'error': 'Solicitud no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+                if solicitud_obj.estado != 'aceptado':
+                    return Response({'error': 'Sólo puedes calificar servicios aceptados'}, status=status.HTTP_400_BAD_REQUEST)
+                if solicitud_obj.cliente != request.user:
+                    return Response({'error': 'Sólo el cliente puede calificar este servicio'}, status=status.HTTP_403_FORBIDDEN)
+                existe = Calificacion.objects.filter(usuario=request.user, solicitud_servicio=solicitud_obj).exists()
+                if existe:
+                    return Response({'error': 'Ya has calificado este servicio'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                with transaction.atomic():
+                    cal = serializer.save()
+
+                    # Si la calificación viene asociada a un pedido_item, asegurar que el campo producto también se rellene
+                    if cal.pedido_item and not cal.producto:
+                        try:
+                            cal.producto = cal.pedido_item.producto
+                            cal.save(update_fields=['producto'])
+                        except Exception:
+                            pass
+
+                    # Si es calificación de producto o por pedido_item, actualizar agregados en Producto
+                    target_prod = None
+                    if cal.producto:
+                        target_prod = cal.producto
+                    elif cal.pedido_item:
+                        target_prod = cal.pedido_item.producto
+
+                    if target_prod:
+                        try:
+                            prod = Producto.objects.get(id=target_prod.id)
+                            # Incluir calificaciones que estén vinculadas por producto o por pedido_item
+                            agg = Calificacion.objects.filter(Q(producto=prod) | Q(pedido_item__producto=prod)).aggregate(avg=Avg('valor'), count=Count('id'))
+                            prod.average_rating = float(agg.get('avg')) if agg.get('avg') is not None else None
+                            prod.rating_count = agg.get('count') or 0
+                            prod.save(update_fields=['average_rating', 'rating_count'])
+                        except Producto.DoesNotExist:
+                            pass
+
+                    # Si es calificación de servicio, guardar en la solicitud para acceso rápido
+                    if cal.solicitud_servicio:
+                        try:
+                            sol = SolicitudServicio.objects.get(id=cal.solicitud_servicio.id)
+                            sol.calificacion_valor = cal.valor
+                            sol.calificacion_comentario = cal.comentario
+                            sol.save(update_fields=['calificacion_valor', 'calificacion_comentario'])
+                        except SolicitudServicio.DoesNotExist:
+                            pass
+
+                    return Response(CalificacionSerializer(cal).data, status=status.HTTP_201_CREATED)
+            except IntegrityError:
+                return Response({'error': 'Ya existe una calificación para este usuario y objetivo'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CalificacionListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        # Listar calificaciones del usuario
+        calificaciones = Calificacion.objects.filter(usuario=request.user).order_by('-creado')
+        serializer = CalificacionSerializer(calificaciones, many=True)
+        return Response(serializer.data)
+
+# --- Vista pública para obtener el promedio y conteo de calificaciones de un vendedor ---
+class VendedorRatingView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, vendedor_id):
+        # Calificaciones relacionadas con productos y/o solicitudes de servicio del vendedor
+        qs = Calificacion.objects.filter(
+            Q(producto__vendedor_id=vendedor_id) | Q(solicitud_servicio__vendedor_id=vendedor_id)
+        )
+        overall = qs.aggregate(avg=Avg('valor'), count=Count('id'))
+        productos_qs = Calificacion.objects.filter(producto__vendedor_id=vendedor_id)
+        servicios_qs = Calificacion.objects.filter(solicitud_servicio__vendedor_id=vendedor_id)
+        productos = productos_qs.aggregate(avg=Avg('valor'), count=Count('id'))
+        servicios = servicios_qs.aggregate(avg=Avg('valor'), count=Count('id'))
+
+        def norm(x):
+            return float(x) if x is not None else None
+
+        data = {
+            'average': norm(overall.get('avg')),
+            'count': overall.get('count') or 0,
+            'average_products': norm(productos.get('avg')),
+            'count_products': productos.get('count') or 0,
+            'average_services': norm(servicios.get('avg')),
+            'count_services': servicios.get('count') or 0,
+        }
+        return Response(data)

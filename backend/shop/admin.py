@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import Categoria, Subcategoria
@@ -13,10 +12,11 @@ class ProductoAdmin(admin.ModelAdmin):
     search_fields = ('nombre', 'descripcion')
 
 class UsuarioAdmin(UserAdmin):
-    list_display = ('username', 'email', 'es_vendedor', 'is_staff', 'is_superuser', 'is_active')
-    list_filter = ('es_vendedor', 'is_staff', 'is_superuser', 'is_active')
+    list_display = ('username', 'email', 'es_vendedor', 'city', 'is_staff', 'is_superuser', 'is_active')
+    list_filter = ('es_vendedor', 'is_staff', 'is_superuser', 'is_active', 'city')
     fieldsets = UserAdmin.fieldsets + (
-        ('Rol', {'fields': ('es_vendedor', 'telefono')}),
+        ('Rol', {'fields': ('es_vendedor', 'telefono', 'city')}),
+        ('Perfil de Ventas', {'fields': ('descripcion_perfil', 'tiene_local', 'direccion_local', 'celular_contacto')}),
     )
 
 admin.site.register(Producto, ProductoAdmin)

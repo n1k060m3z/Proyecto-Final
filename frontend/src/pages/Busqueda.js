@@ -27,6 +27,9 @@ const Busqueda = () => {
   const [carrito, setCarrito] = useState([]);
   // Estado para cantidades por producto
   const [cantidades, setCantidades] = useState({});
+  // Filtro de ciudad
+  const [ciudadFiltro, setCiudadFiltro] = useState(null);
+	const [ubicaciones, setUbicaciones] = useState([]);
   // Cargar productos en carrito para marcar los que ya están
   useEffect(() => {
 	const token = localStorage.getItem('token');
@@ -130,6 +133,9 @@ const filtrosEjemplo = {
 					if (p.imagen && p.imagen.startsWith('/media/productos/')) {
 						p.imagen = `http://localhost:8000${p.imagen}`;
 					}
+					// Asegurar que los campos de rating existen y estén normalizados
+					if (!('average_rating' in p)) p.average_rating = p.calificacion || null;
+					if (!('rating_count' in p)) p.rating_count = 0;
 					return p;
 				});
 				setProductos(productosFiltrados);
@@ -260,6 +266,17 @@ const handleCategoriaClick = (cat, idx) => {
 const params = new URLSearchParams(location.search);
 const q = params.get('q');
 
+	useEffect(() => {
+		// Calcular ubicaciones dinámicamente según los productos cargados
+		const conteo = {};
+		productos.forEach(p => {
+			const ciudad = p.ciudad_vendedor || p.ciudad || 'Sin ciudad';
+			if (ciudad) conteo[ciudad] = (conteo[ciudad] || 0) + 1;
+		});
+		const lista = Object.entries(conteo).map(([nombre, cantidad]) => ({ nombre, cantidad }));
+		setUbicaciones(lista);
+	}, [productos]);
+
 	return (
 		<div className="container">
 			<CatBar />
@@ -274,9 +291,12 @@ const q = params.get('q');
 						</button>
 					))}
 					<div className="filtro-titulo">Ubicación</div>
-					{/* Puedes dejar ubicaciones y tiendas como estaban, o hacerlos dinámicos si lo necesitas */}
-					{filtrosEjemplo.ubicaciones.map((ubi) => (
-						<button key={ubi.nombre} className="filtro-link">
+					{ubicaciones.map((ubi) => (
+						<button
+							key={ubi.nombre}
+							className={`filtro-link${ciudadFiltro === ubi.nombre ? ' filtro-link-activo' : ''}`}
+							onClick={() => setCiudadFiltro(ciudadFiltro === ubi.nombre ? null : ubi.nombre)}
+						>
 							{ubi.nombre} <span style={{ color: "#888" }}>({ubi.cantidad})</span>
 						</button>
 					))}
@@ -307,53 +327,56 @@ const q = params.get('q');
 							<option value="precio_mayor">Mayor precio</option>
 						</select>
 					</div>
-  {productos.length === 0 ? (
-			<div style={{textAlign: 'center', color: '#888', fontSize: 20, marginTop: 40}}>
-			  Esta categoria no tiene por el momento productos en oferta
-			</div>
-		  ) : (
-  productos.map((producto) => {
-	const enCarrito = carrito.some((item) => item.producto && (item.producto.id === producto.id || item.producto === producto.id));
-	return (
-	  <div key={producto.id} className="producto-link-wrapper" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-		<Link
-		  to={`/producto/${producto.id}`}
-		  style={{ flex: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}
-		>
-		  <div className="producto-card" style={{ width: '100%' }}>
-			<img
-			  src={producto.imagen}
-			  alt={producto.nombre}
-			  className="producto-img"
-			/>
-			<div className="producto-info">
-			  <div className="producto-nombre">{producto.nombre}</div>
-			  <div className="producto-precio">
-				{producto.en_oferta && producto.descuento > 0 ? (
-				  <>
-					<span style={{ color: '#e53935', fontWeight: 700 }}>
-					  $ {Math.floor(producto.precio_con_descuento).toLocaleString()}
-					</span>
-					<span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
-					  $ {Math.floor(producto.precio).toLocaleString()}
-					</span>
-					<span style={{ color: '#388e3c', marginLeft: 8 }}>
-					  -{producto.descuento}%
-					</span>
-				  </>
-				) : (
-				  producto.precio
-					? `$ ${Math.floor(producto.precio).toLocaleString()}`
-					: "Precio a convenir"
-				)}
-			  </div>
-			  <div className="producto-ciudad">
-				{producto.ciudad || ""}
-			  </div>
-			</div>
-		  </div>
-		</Link>
-		<div style={{ marginLeft: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+					{productos.filter(p => !ciudadFiltro || (p.ciudad_vendedor || p.ciudad) === ciudadFiltro).length === 0 ? (
+						<div style={{textAlign: 'center', color: '#888', fontSize: 20, marginTop: 40}}>
+							Esta categoria no tiene por el momento productos en oferta
+						</div>
+					) : (
+						productos
+							.filter(p => !ciudadFiltro || (p.ciudad_vendedor || p.ciudad) === ciudadFiltro)
+							.map((producto) => {
+    const enCarrito = carrito.some((item) => item.producto && (item.producto.id === producto.id || item.producto === producto.id));
+    return (
+      <div key={producto.id} className="producto-link-wrapper" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link
+          to={`/producto/${producto.id}`}
+          style={{ flex: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}
+        >
+          <div className="producto-card" style={{ width: '100%' }}>
+            <img
+              src={producto.imagen}
+              alt={producto.nombre}
+              className="producto-img"
+            />
+            <div className="producto-info">
+              <div className="producto-nombre">{producto.nombre}</div>
+              <div className="producto-precio">
+                {producto.en_oferta && producto.descuento > 0 ? (
+                  <>
+                    <span style={{ color: '#e53935', fontWeight: 700 }}>
+                      $ {Math.floor(producto.precio_con_descuento).toLocaleString()}
+                    </span>
+                    <span style={{ textDecoration: 'line-through', color: '#888', marginLeft: 8 }}>
+                      $ {Math.floor(producto.precio).toLocaleString()}
+                    </span>
+                    <span style={{ color: '#388e3c', marginLeft: 8 }}>
+                      -{producto.descuento}%
+                    </span>
+                  </>
+                ) : (
+                  producto.precio
+                    ? `$ ${Math.floor(producto.precio).toLocaleString()}`
+                    : "Precio a convenir"
+                )}
+              </div>
+              <div className="producto-ciudad">
+                {producto.ciudad || ""}
+              </div>
+              {/* Las estrellas fueron removidas de la vista de listados; solo se muestran en la página del vendedor */}
+            </div>
+          </div>
+        </Link>
+        <div style={{ marginLeft: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
 		  <label htmlFor={`cantidad-input-${producto.id}`} style={{ fontSize: 13, color: '#555', marginBottom: 2 }}>Cantidad</label>
 		  <input
 			id={`cantidad-input-${producto.id}`}
@@ -371,12 +394,15 @@ const q = params.get('q');
 			disabled={enCarrito || producto.stock === 0}
 			hidden={producto.stock === 0}
 		  />
-		  <AddToCartButton
-			onClick={() => handleAddToCart(producto.id)}
-			added={enCarrito}
-			disabled={enCarrito || producto.stock === 0}
-		  />
-		  {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Agotado</span>}
+		  {/* Ocultar botón de carrito si es un servicio */}
+        {!(producto.categoria && (producto.categoria.nombre === 'Servicios' || producto.categoria === 'Servicios')) && (
+          <AddToCartButton
+            onClick={() => handleAddToCart(producto.id)}
+            added={enCarrito}
+            disabled={enCarrito || producto.stock === 0}
+          />
+        )}
+        {producto.stock === 0 && <span style={{ color: 'red', fontSize: 12 }}>Agotado</span>}
 		</div>
 	  </div>
 	);
