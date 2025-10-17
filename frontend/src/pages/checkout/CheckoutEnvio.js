@@ -11,53 +11,99 @@ const CheckoutEnvio = ({ setMetodoEnvio }) => {
   const [loading, setLoading] = useState(true);
   const [usarOtra, setUsarOtra] = useState(false);
   const [otraDireccion, setOtraDireccion] = useState({ ciudad: '', direccion: '', barrio: '' });
+  // ciudades ahora será lista de objetos { id, name }
   const [ciudades, setCiudades] = useState([]);
   const [errors, setErrors] = useState({ ciudad: '', direccion: '', barrio: '' });
+  const [faltanCamposPerfil, setFaltanCamposPerfil] = useState(false);
+  // Nuevo estado: editar datos directamente en la tarjeta superior
+  const [editarPerfil, setEditarPerfil] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('perfil/', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    })
-      .then(res => {
-        // Normalizar la dirección del perfil a un objeto
-        setDireccion({
-          direccion: res.data.direccion || '',
-          ciudad: res.data.ciudad || '',
-          barrio: res.data.barrio || ''
-        });
-        setLoading(false);
-      })
-      .catch(() => {
-        setDireccion(null);
-        setLoading(false);
-      });
-
-    // Cargar lista de ciudades para autocomplete (si existe el endpoint)
+    // Cargar lista de ciudades primero (si existe el endpoint)
     api.get('ciudades/')
       .then(res => {
-        const list = Array.isArray(res.data) ? res.data.map(c => (typeof c === 'object' ? (c.nombre || c.name || c.label) : String(c))) : [];
+        const list = Array.isArray(res.data)
+          ? res.data.map(c => (typeof c === 'object'
+              ? { id: c.id || c.pk || null, name: c.nombre || c.name || c.label || '' }
+              : { id: null, name: String(c) }))
+          : [];
         setCiudades(list);
       })
-      .catch(() => setCiudades([]));
+      .catch(() => setCiudades([]))
+      .finally(() => {
+        // Después de intentar cargar ciudades, cargar perfil
+        api.get('perfil/', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
+          .then(res => {
+            // Puede venir como `city` (id) o `ciudad` (nombre)
+            const rawCity = res.data.ciudad ?? res.data.city ?? '';
+            const perfilDireccion = {
+              direccion: res.data.direccion || '',
+              ciudad: rawCity,
+              barrio: res.data.barrio || ''
+            };
+            setDireccion(perfilDireccion);
+            // Si faltan campos críticos (ciudad o barrio), avisar y permitir completarlos
+            if (!perfilDireccion.ciudad || !perfilDireccion.barrio) {
+              setFaltanCamposPerfil(true);
+            } else {
+              setFaltanCamposPerfil(false);
+            }
+            setLoading(false);
+          })
+          .catch(() => {
+            setDireccion(null);
+            setLoading(false);
+          });
+      });
   }, []);
+
+  // Si la dirección tiene city como id y ya cargamos la lista de ciudades, mapear id -> nombre
+  useEffect(() => {
+    if (!direccion || ciudades.length === 0) return;
+    const ciudadVal = direccion.ciudad;
+    if (ciudadVal == null || ciudadVal === '') return;
+    // Si es numérico (id), buscar nombre
+    const isId = (typeof ciudadVal === 'number') || (/^\d+$/.test(String(ciudadVal)));
+    if (isId) {
+      const found = ciudades.find(c => c.id != null && String(c.id) === String(ciudadVal));
+      if (found) {
+        if (found.name !== direccion.ciudad) {
+          setDireccion(d => ({ ...d, ciudad: found.name }));
+        }
+      }
+    }
+  }, [ciudades, direccion]);
 
   const handleContinuar = () => {
     // Validaciones mínimas: los campos deben existir y tener longitud mínima
+    const getCiudadVal = val => {
+      if (val == null) return '';
+      // si viene como objeto {id,name}
+      if (typeof val === 'object') return val.name || '';
+      return String(val);
+    };
+
     if (!usarOtra) {
-      if (!direccion || !direccion.ciudad || !direccion.direccion || !direccion.barrio) return;
-      if (direccion.ciudad.trim().length < MIN_LENGTH || direccion.direccion.trim().length < MIN_LENGTH || direccion.barrio.trim().length < MIN_LENGTH) return;
-      // Si tenemos lista de ciudades, validar que la ciudad exista
-      if (ciudades.length > 0 && !ciudades.includes(direccion.ciudad.trim())) return;
+      if (!direccion || !getCiudadVal(direccion.ciudad) || !direccion.direccion || !direccion.barrio) return;
+      if (getCiudadVal(direccion.ciudad).trim().length < MIN_LENGTH || direccion.direccion.trim().length < MIN_LENGTH || direccion.barrio.trim().length < MIN_LENGTH) return;
+      // Si tenemos lista de ciudades (por nombre), validar que la ciudad exista (aceptar coincidencia por id previo también)
+      if (ciudades.length > 0) {
+        const ciudadStr = getCiudadVal(direccion.ciudad).trim();
+        const existePorNombre = ciudades.some(c => c.name.toLowerCase() === ciudadStr.toLowerCase());
+        const existePorId = ciudades.some(c => String(c.id) === String(direccion.ciudad));
+        if (!existePorNombre && !existePorId) return;
+      }
     }
     if (usarOtra) {
       if (!otraDireccion.ciudad || !otraDireccion.direccion || !otraDireccion.barrio) return;
       if (otraDireccion.ciudad.trim().length < MIN_LENGTH || otraDireccion.direccion.trim().length < MIN_LENGTH || otraDireccion.barrio.trim().length < MIN_LENGTH) return;
-      if (ciudades.length > 0 && !ciudades.includes(otraDireccion.ciudad.trim())) return;
+      if (ciudades.length > 0 && !ciudades.some(c => c.name.toLowerCase() === otraDireccion.ciudad.trim().toLowerCase())) return;
     }
     if (setMetodoEnvio) setMetodoEnvio('domicilio');
     // Guardar dirección seleccionada en localStorage para el siguiente paso
-    // Guardamos un objeto estructurado para poder reutilizar campos (ciudad, barrio, direccion)
     const direccionFinal = !usarOtra ? direccion : { ...otraDireccion };
     localStorage.setItem('direccion_entrega', JSON.stringify(direccionFinal));
     navigate('/checkout/pago');
@@ -82,7 +128,66 @@ const CheckoutEnvio = ({ setMetodoEnvio }) => {
           {direccion ? (
             // Mostrar los campos de la dirección guardada
             <div style={{ color: '#555', fontSize: 15 }}>
-              {direccion.direccion}{direccion.barrio ? `, Barrio ${direccion.barrio}` : ''}{direccion.ciudad ? `, ${direccion.ciudad}` : ''}
+              {!editarPerfil ? (
+                <>
+                  {direccion.direccion}{direccion.barrio ? `, Barrio ${direccion.barrio}` : ''}{direccion.ciudad ? `, ${direccion.ciudad}` : ''}
+                  {faltanCamposPerfil && (
+                    <div style={{ marginTop: 8, color: '#d97706' }}>
+                      Tu perfil no tiene todos los campos de dirección (falta ciudad o barrio).<br />
+                      <button
+                        onClick={() => setEditarPerfil(true)}
+                        style={{ marginTop: 8, background: '#ffb74d', color: '#000', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                      >Completar dirección</button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                // Inputs inline en la tarjeta superior para completar datos faltantes
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="Ciudad"
+                    list="ciudades-list"
+                    value={direccion.ciudad || ''}
+                    onChange={e => setDireccion({ ...direccion, ciudad: e.target.value })}
+                    className="w-full border rounded px-3 py-2"
+                    style={{ maxWidth: 350 }}
+                  />
+                  {ciudades.length > 0 && (
+                    <datalist id="ciudades-list">
+                      {ciudades.map((c, idx) => <option key={idx} value={c.name} />)}
+                    </datalist>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="Barrio"
+                    value={direccion.barrio || ''}
+                    onChange={e => setDireccion({ ...direccion, barrio: e.target.value })}
+                    className="w-full border rounded px-3 py-2"
+                    style={{ maxWidth: 350 }}
+                  />
+                  <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                    <button
+                      onClick={() => {
+                        // Validar mínimos y guardar localmente
+                        const nombreCiudad = (direccion.ciudad || '').trim();
+                        const barrioVal = (direccion.barrio || '').trim();
+                        if (nombreCiudad.length < MIN_LENGTH) { setErrors(e => ({ ...e, ciudad: 'Ciudad inválida' })); return; }
+                        if (barrioVal.length < MIN_LENGTH) { setErrors(e => ({ ...e, barrio: 'Barrio inválido' })); return; }
+                        setFaltanCamposPerfil(false);
+                        setEditarPerfil(false);
+                        // No escribir al perfil en backend aquí; solo persistir para checkout
+                        // localStorage se actualizarizará en handleContinuar
+                      }}
+                      style={{ background: '#2979ff', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 12px', cursor: 'pointer' }}
+                    >Guardar</button>
+                    <button
+                      onClick={() => { setEditarPerfil(false); }}
+                      style={{ background: '#e0e0e0', color: '#000', border: 'none', borderRadius: 6, padding: '8px 12px', cursor: 'pointer' }}
+                    >Cancelar</button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div style={{ color: '#e53935', fontSize: 15 }}>
@@ -120,7 +225,7 @@ const CheckoutEnvio = ({ setMetodoEnvio }) => {
               />
               {ciudades.length > 0 && (
                 <datalist id="ciudades-list">
-                  {ciudades.map((c, idx) => <option key={idx} value={c} />)}
+                  {ciudades.map((c, idx) => <option key={idx} value={c.name} />)}
                 </datalist>
               )}
               {errors.ciudad && <div style={{ color: 'red', fontSize: 13 }}>{errors.ciudad}</div>}
@@ -155,12 +260,12 @@ const CheckoutEnvio = ({ setMetodoEnvio }) => {
             if (!direccion || !direccion.ciudad || direccion.ciudad.trim().length < MIN_LENGTH) { newErrors.ciudad = 'Ciudad inválida'; ok = false; }
             if (!direccion || !direccion.direccion || direccion.direccion.trim().length < MIN_LENGTH) { newErrors.direccion = 'Dirección inválida'; ok = false; }
             if (!direccion || !direccion.barrio || direccion.barrio.trim().length < MIN_LENGTH) { newErrors.barrio = 'Barrio inválido'; ok = false; }
-            if (ciudades.length > 0 && direccion && !ciudades.includes(direccion.ciudad.trim())) { newErrors.ciudad = 'Ciudad no encontrada en la lista'; ok = false; }
+            if (ciudades.length > 0 && direccion && !ciudades.some(c => c.name.toLowerCase() === direccion.ciudad.trim().toLowerCase())) { newErrors.ciudad = 'Ciudad no encontrada en la lista'; ok = false; }
           } else {
             if (!otraDireccion.ciudad || otraDireccion.ciudad.trim().length < MIN_LENGTH) { newErrors.ciudad = 'Ciudad inválida'; ok = false; }
             if (!otraDireccion.direccion || otraDireccion.direccion.trim().length < MIN_LENGTH) { newErrors.direccion = 'Dirección inválida'; ok = false; }
             if (!otraDireccion.barrio || otraDireccion.barrio.trim().length < MIN_LENGTH) { newErrors.barrio = 'Barrio inválido'; ok = false; }
-            if (ciudades.length > 0 && !ciudades.includes(otraDireccion.ciudad.trim())) { newErrors.ciudad = 'Ciudad no encontrada en la lista'; ok = false; }
+            if (ciudades.length > 0 && !ciudades.some(c => c.name.toLowerCase() === otraDireccion.ciudad.trim().toLowerCase())) { newErrors.ciudad = 'Ciudad no encontrada en la lista'; ok = false; }
           }
           setErrors(newErrors);
           if (ok) handleContinuar();

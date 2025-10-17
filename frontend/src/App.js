@@ -55,6 +55,24 @@ function App() {
           });
           if (!res.ok) return;
           const usuario = await res.json();
+          // Guardar usuario en localStorage para uso por componentes de checkout y otros
+          try {
+            const usuarioData = {
+              id: usuario.id,
+              nombre: usuario.username || usuario.nombre || '',
+              correo: usuario.email || usuario.correo || '',
+              telefono: usuario.telefono || '',
+              direccion: usuario.direccion || '',
+              ciudad: usuario.city || usuario.ciudad || '',
+              barrio: usuario.barrio || ''
+            };
+            localStorage.setItem('usuario_data', JSON.stringify(usuarioData));
+            localStorage.setItem('usuario', usuario.username || usuarioData.nombre || '');
+            localStorage.setItem('es_vendedor', usuario.es_vendedor ? 'true' : 'false');
+          } catch (e) {
+            console.log('DEBUG error guardando usuario_data en localStorage', e);
+          }
+
           const n = await calcularNotificaciones(usuario);
           console.log('DEBUG notifs calculadas:', n, 'usuario:', usuario);
           setNotifs(n);

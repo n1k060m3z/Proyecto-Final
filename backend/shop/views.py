@@ -261,7 +261,30 @@ class PedidoCreateView(APIView):
             return Response({'error': 'No se encontraron productos seleccionados'}, status=status.HTTP_400_BAD_REQUEST)
 
         total = sum(item.producto.precio * item.cantidad for item in items)
-        pedido = Pedido.objects.create(usuario=usuario, total=total)
+
+        # Leer datos de entrega desde el payload (si vienen)
+        entrega = {}
+        if isinstance(data, dict):
+            entrega = data.get('entrega', {}) or {}
+        entrega_nombre = entrega.get('nombre') or entrega.get('entrega_nombre')
+        entrega_correo = entrega.get('correo') or entrega.get('entrega_correo')
+        entrega_telefono = entrega.get('telefono') or entrega.get('entrega_telefono')
+        entrega_direccion = entrega.get('direccion') or entrega.get('entrega_direccion')
+        entrega_ciudad = entrega.get('ciudad') or entrega.get('entrega_ciudad')
+        entrega_barrio = entrega.get('barrio') or entrega.get('entrega_barrio')
+        metodo_pago = data.get('metodo_pago') or entrega.get('metodo_pago')
+
+        pedido = Pedido.objects.create(
+            usuario=usuario,
+            total=total,
+            entrega_nombre=entrega_nombre,
+            entrega_correo=entrega_correo,
+            entrega_telefono=entrega_telefono,
+            entrega_direccion=entrega_direccion,
+            entrega_ciudad=entrega_ciudad,
+            entrega_barrio=entrega_barrio,
+            metodo_pago=metodo_pago
+        )
         for item in items:
             PedidoItem.objects.create(
                 pedido=pedido,

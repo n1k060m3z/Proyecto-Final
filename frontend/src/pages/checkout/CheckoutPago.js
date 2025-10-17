@@ -128,20 +128,66 @@ const CheckoutPago = () => {
   };
 
   const handleConfirmar = async () => {
+    // Refrescar usuario_data desde backend por si cambió la sesión
+    try {
+      const perfilRes = await api.get('perfil/', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      if (perfilRes && perfilRes.data) {
+        localStorage.setItem('usuario_data', JSON.stringify({
+          id: perfilRes.data.id,
+          nombre: perfilRes.data.username || perfilRes.data.nombre || '',
+          correo: perfilRes.data.email || perfilRes.data.correo || '',
+          telefono: perfilRes.data.telefono || '',
+          direccion: perfilRes.data.direccion || '',
+          ciudad: perfilRes.data.city || perfilRes.data.ciudad || '',
+          barrio: perfilRes.data.barrio || ''
+        }));
+      }
+    } catch (e) {
+      console.log('DEBUG error refrescando perfil antes de crear pedido', e);
+    }
+
     // Usar los IDs reales de los CarritoItem del backend
     const ids = carritoItems.map(item => item.id);
+    // Preparar datos de entrega desde el form (si contraentrega) o desde direccion_entrega
+    let entregaObj = {};
+    if (seleccion === 'contraentrega') {
+      entregaObj = {
+        nombre: form.nombre,
+        direccion: form.direccion,
+        telefono: form.telefono,
+        correo: form.correo,
+        ciudad: form.ciudad,
+        barrio: form.barrio
+      };
+    } else {
+      // Otros métodos: intentar usar direccion_entrega guardada
+      try {
+        entregaObj = JSON.parse(localStorage.getItem('direccion_entrega') || 'null') || {};
+      } catch (e) {
+        entregaObj = {};
+      }
+    }
+
     try {
-      await crearPedido(ids); // IDs de los items del carrito
+      await crearPedido(ids, entregaObj, seleccion);
     } catch (err) {
+      console.error('Error al crear pedido:', err);
       alert('Error al crear el pedido en el backend');
       return;
     }
     // Guardar resumen ANTES de limpiar el carrito
-    const resumen = { items: carritoItems, total: carritoItems.reduce((acc, item) => acc + (item.producto?.precio || 0) * item.cantidad, 0) };
+    const resumen = { items: carritoItems, total: carritoItems.reduce((acc, item) => acc + (item.producto?.precio || 0) * item.cantidad, 0), entrega: entregaObj, metodo: seleccion };
     localStorage.setItem('ultimo_resumen_pedido', JSON.stringify(resumen));
     // Limpiar carrito local solo para frontend
     localStorage.removeItem('carrito');
-    setCarritoItems([]);
+    // Forzar refresco del carrito desde backend
+    try {
+      const res = await api.get('carrito/', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const items = Array.isArray(res.data) ? res.data : (res.data.items || []);
+      setCarritoItems(items);
+    } catch (e) {
+      setCarritoItems([]);
+    }
     navigate('/resumen-pedido', { state: resumen });
   };
 

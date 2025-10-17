@@ -94,6 +94,15 @@ class Pedido(models.Model):
     creado = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
 
+    # Campos para datos de entrega (persistir la info ingresada en checkout)
+    entrega_nombre = models.CharField(max_length=150, blank=True, null=True)
+    entrega_correo = models.CharField(max_length=150, blank=True, null=True)
+    entrega_telefono = models.CharField(max_length=50, blank=True, null=True)
+    entrega_direccion = models.CharField(max_length=255, blank=True, null=True)
+    entrega_ciudad = models.CharField(max_length=100, blank=True, null=True)
+    entrega_barrio = models.CharField(max_length=150, blank=True, null=True)
+    metodo_pago = models.CharField(max_length=50, blank=True, null=True)
+
     def __str__(self):
         return f'Pedido #{self.pk} de {self.usuario.username}'
 
