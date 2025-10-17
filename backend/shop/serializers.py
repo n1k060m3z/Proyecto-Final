@@ -169,9 +169,18 @@ class PedidoItemSerializer(serializers.ModelSerializer):
 class PedidoSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
     usuario_username = serializers.CharField(source='usuario.username', read_only=True)
+    # Nuevos campos de entrega
+    entrega_nombre = serializers.CharField(read_only=True)
+    entrega_correo = serializers.CharField(read_only=True)
+    entrega_telefono = serializers.CharField(read_only=True)
+    entrega_direccion = serializers.CharField(read_only=True)
+    entrega_ciudad = serializers.CharField(read_only=True)
+    entrega_barrio = serializers.CharField(read_only=True)
+    metodo_pago = serializers.CharField(read_only=True)
+
     class Meta:
         model = Pedido
-        fields = ['id', 'usuario', 'usuario_username', 'creado', 'total', 'items']
+        fields = ['id', 'usuario', 'usuario_username', 'creado', 'total', 'items', 'entrega_nombre', 'entrega_correo', 'entrega_telefono', 'entrega_direccion', 'entrega_ciudad', 'entrega_barrio', 'metodo_pago']
 
     def get_items(self, obj):
         request = self.context.get('request')

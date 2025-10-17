@@ -14,6 +14,31 @@ class SolicitudServicioListCreateView(generics.ListCreateAPIView):
         # Mostrar todas las solicitudes donde el usuario es cliente o vendedor
         return SolicitudServicio.objects.filter(models.Q(cliente=user) | models.Q(vendedor=user)).distinct()
 
+    def create(self, request, *args, **kwargs):
+        # Normalizar payload antes de validar: aceptar ciudad como id, nombre o dict
+        incoming = request.data
+        try:
+            data = incoming.copy() if hasattr(incoming, 'copy') else dict(incoming)
+        except Exception:
+            data = dict(incoming)
+
+        ciudad = data.get('ciudad')
+        if isinstance(ciudad, dict):
+            # aceptar formatos tipo {'id': 12} o {'name': 'Cali'}
+            if 'id' in ciudad:
+                data['ciudad'] = str(ciudad.get('id'))
+            elif 'name' in ciudad:
+                data['ciudad'] = ciudad.get('name')
+        # asegurar que si se envía un entero lo convertimos a string para que el serializer CharField lo acepte
+        if isinstance(ciudad, int):
+            data['ciudad'] = str(ciudad)
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def perform_create(self, serializer):
         # El cliente crea la solicitud
         data = self.request.data
@@ -86,9 +111,10 @@ class SolicitudServicioUpdateView(generics.UpdateAPIView, generics.DestroyAPIVie
         # Aceptar o rechazar (solo vendedor)
         if user == solicitud.vendedor and data.get('estado') in ['aceptado', 'rechazado']:
             if data.get('estado') == 'rechazado':
-                # Si el vendedor rechaza, eliminar la solicitud inmediatamente
-                solicitud.delete()
-                return Response({'mensaje': 'Solicitud rechazada y eliminada'}, status=status.HTTP_200_OK)
+                # Marcar la solicitud como rechazada para que tanto vendedor como cliente puedan ver el estado
+                solicitud.estado = 'rechazado'
+                solicitud.save()
+                return Response(self.get_serializer(solicitud).data)
             else:
                 solicitud.estado = 'aceptado'
                 solicitud.save()

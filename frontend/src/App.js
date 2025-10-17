@@ -55,10 +55,42 @@ function App() {
           });
           if (!res.ok) return;
           const usuario = await res.json();
+          // Guardar usuario en localStorage para uso por componentes de checkout y otros
+          try {
+            const usuarioData = {
+              id: usuario.id,
+              nombre: usuario.username || usuario.nombre || '',
+              correo: usuario.email || usuario.correo || '',
+              telefono: usuario.telefono || '',
+              direccion: usuario.direccion || '',
+              ciudad: usuario.city || usuario.ciudad || '',
+              barrio: usuario.barrio || ''
+            };
+            localStorage.setItem('usuario_data', JSON.stringify(usuarioData));
+            localStorage.setItem('usuario', usuario.username || usuarioData.nombre || '');
+            localStorage.setItem('es_vendedor', usuario.es_vendedor ? 'true' : 'false');
+          } catch (e) {
+            console.log('DEBUG error guardando usuario_data en localStorage', e);
+          }
+
           const n = await calcularNotificaciones(usuario);
           console.log('DEBUG notifs calculadas:', n, 'usuario:', usuario);
-          setNotifs(n);
-          notifsRef.current = n;
+          // Si la respuesta incluye notifKey, persistir en localStorage
+          const notifKey = n && n.notifKey ? n.notifKey : null;
+          if (notifKey) localStorage.setItem('ultima_notif_key', notifKey);
+          // Tener en cuenta si el usuario ya marcó la notificación como vista por sección
+          const userId = usuario && usuario.id ? usuario.id : null;
+          const vistoPerfil = userId ? (localStorage.getItem(`notificacionVista_perfil_${userId}`) === notifKey) : false;
+          const vistoCompras = userId ? (localStorage.getItem(`notificacionVista_compras_${userId}`) === notifKey) : false;
+          const vistoVentas = userId ? (localStorage.getItem(`notificacionVista_ventas_${userId}`) === notifKey) : false;
+          const adjusted = {
+            perfil: !!notifKey && !vistoPerfil,
+            compras: !!(n && n.compras) && !vistoCompras,
+            ventas: !!(n && n.ventas) && !vistoVentas,
+            notifKey
+          };
+          setNotifs(adjusted);
+          notifsRef.current = adjusted;
         } catch (e) {
           console.log('DEBUG error notifs:', e);
         }

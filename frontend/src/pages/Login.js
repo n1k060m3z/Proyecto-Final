@@ -31,6 +31,29 @@ function Login({ setIsAuthenticated, setEsVendedor }) {
       localStorage.setItem('es_vendedor', data.es_vendedor === true || data.es_vendedor === 'true' ? 'true' : 'false');
       setIsAuthenticated(true);
       setEsVendedor(data.es_vendedor === true || data.es_vendedor === 'true');
+      // Obtener perfil completo y guardar usuario_data inmediatamente para evitar usar datos cacheados
+      try {
+        const perfilRes = await fetch('http://localhost:8000/api/perfil/', {
+          headers: { Authorization: `Bearer ${data.access}` }
+        });
+        if (perfilRes.ok) {
+          const perfil = await perfilRes.json();
+          const usuarioData = {
+            id: perfil.id,
+            nombre: perfil.username || perfil.nombre || '',
+            correo: perfil.email || perfil.correo || '',
+            telefono: perfil.telefono || '',
+            direccion: perfil.direccion || '',
+            ciudad: perfil.city || perfil.ciudad || '',
+            barrio: perfil.barrio || ''
+          };
+          localStorage.setItem('usuario_data', JSON.stringify(usuarioData));
+          localStorage.setItem('usuario', perfil.username || usuarioData.nombre || '');
+          localStorage.setItem('es_vendedor', perfil.es_vendedor ? 'true' : 'false');
+        }
+      } catch (e) {
+        console.log('Error al obtener perfil tras login', e);
+      }
       toast.success('Bienvenido');
       navigate('/');
     } catch (err) {
