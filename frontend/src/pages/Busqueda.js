@@ -6,6 +6,24 @@ import { useParams, useLocation, Link } from "react-router-dom";
 import "../style/busqueda.css";
 import CatBar from '../components/cat';
 
+// Helper: normalizar texto (eliminar diacríticos y pasar a minúsculas) para búsquedas insensibles a tildes
+const normalizeText = (s) => {
+	if (!s) return '';
+	try {
+		// Normalizar diacríticos, eliminar caracteres no alfanuméricos (dejando espacios), colapsar espacios y pasar a minúsculas
+		return s
+			.toString()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '') // eliminar diacríticos
+			.replace(/[^a-zA-Z0-9\s]/g, ' ') // quitar puntuación
+			.replace(/\s+/g, ' ') // colapsar espacios
+			.trim()
+			.toLowerCase();
+	} catch (e) {
+		return s.toString().toLowerCase().trim();
+	}
+};
+
 // El conteo de categorías será dinámico
 
 const categoriaNombresPorDefecto = {
@@ -124,9 +142,16 @@ const filtrosEjemplo = {
 				// Si hay búsqueda, filtrar solo por el query
 				const q = params.get('q');
 				if (q) {
-					productosFiltrados = productosFiltrados.filter(p =>
-						p.nombre && p.nombre.toLowerCase().includes(q.toLowerCase())
-					);
+					const qNorm = normalizeText(q).trim();
+					const tokens = qNorm.split(/\s+/).filter(Boolean);
+					productosFiltrados = productosFiltrados.filter(p => {
+						const nombre = p.nombre || '';
+						const descripcion = p.descripcion || '';
+						const categoriaNombre = (p.categoria && (p.categoria.nombre || p.categoria)) || '';
+						const hay = normalizeText(`${nombre} ${descripcion} ${categoriaNombre}`);
+						// Exigir que todos los tokens estén presentes (búsqueda 'AND')
+						return tokens.every(t => hay.includes(t));
+					});
 				}
 				// Normalizar la URL de imagen para asegurar que siempre sea absoluta
 				productosFiltrados = productosFiltrados.map(p => {

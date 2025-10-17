@@ -56,9 +56,10 @@ export const marcarPedidoItemEnviado = async (itemId) => {
   return response.data;
 };
 
-export const crearPedido = async (items) => {
+export const crearPedido = async (items, entrega = {}, metodo_pago = '') => {
   const token = localStorage.getItem('token');
-  const response = await api.post('pedido/', { items }, {
+  const payload = { items, entrega, metodo_pago };
+  const response = await api.post('pedido/', payload, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;

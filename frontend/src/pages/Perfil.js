@@ -68,7 +68,7 @@ const Perfil = ({ setNotifs: setNotifsGlobal }) => {
       if (relevantes.length > 0) {
         // Construir un identificador único para cada notificación relevante
         const ultima = relevantes.reduce((a, b) => (a.id > b.id ? a : b));
-        notifKey = `${ultima.id}-${ultima.estado}-${ultima.fecha_propuesta||''}-${ultima.hora_propuesta||''}`;
+        notifKey = `sol-${ultima.id}-${ultima.estado}-${ultima.fecha_propuesta||''}-${ultima.hora_propuesta||''}`;
         notifCompras = relevantes.some(s => s.cliente === usuario.id);
         notifVentas = relevantes.some(s => s.vendedor === usuario.id);
       }
@@ -153,13 +153,13 @@ const Perfil = ({ setNotifs: setNotifsGlobal }) => {
         {section === 'compras' && (
           <div>
             <h2 className="text-xl font-bold mb-4">Mis compras</h2>
-            <Ventas modoCompras usuario={usuario} />
+            <Ventas modoCompras usuario={usuario} setNotifsGlobal={setNotifsGlobal} />
           </div>
         )}
         {section === 'ventas' && usuario.es_vendedor && (
           <div>
             <h2 className="text-xl font-bold mb-4">Mis ventas</h2>
-            <Ventas usuario={usuario} />
+            <Ventas usuario={usuario} setNotifsGlobal={setNotifsGlobal} />
           </div>
         )}
         {section === 'perfil_ventas' && usuario.es_vendedor && (
