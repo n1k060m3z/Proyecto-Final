@@ -118,6 +118,7 @@ function ResumenPedido() {
           <div><b>Teléfono:</b> {getCampo('telefono') || '-'}</div>
           <div><b>Ciudad:</b> {getCampo('ciudad') || '-'}</div>
           <div><b>Dirección:</b> {getCampo('direccion') || '-'}</div>
+          <div><b>Barrio:</b> {getCampo('barrio') || '-'}</div>
           <div><b>Método de pago:</b> {metodoPago ? metodoPago.charAt(0).toUpperCase() + metodoPago.slice(1) : (JSON.parse(localStorage.getItem('ultimo_resumen_pedido') || '{}').metodo || '-')}</div>
         </div>
       </div>
