@@ -15,8 +15,6 @@ const CheckoutEnvio = ({ setMetodoEnvio }) => {
   const [ciudades, setCiudades] = useState([]);
   const [errors, setErrors] = useState({ ciudad: '', direccion: '', barrio: '' });
   const [faltanCamposPerfil, setFaltanCamposPerfil] = useState(false);
-  // Nuevo estado: editar datos directamente en la tarjeta superior
-  const [editarPerfil, setEditarPerfil] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -128,64 +126,14 @@ const CheckoutEnvio = ({ setMetodoEnvio }) => {
           {direccion ? (
             // Mostrar los campos de la dirección guardada
             <div style={{ color: '#555', fontSize: 15 }}>
-              {!editarPerfil ? (
-                <>
-                  {direccion.direccion}{direccion.barrio ? `, Barrio ${direccion.barrio}` : ''}{direccion.ciudad ? `, ${direccion.ciudad}` : ''}
-                  {faltanCamposPerfil && (
-                    <div style={{ marginTop: 8, color: '#d97706' }}>
-                      Tu perfil no tiene todos los campos de dirección (falta ciudad o barrio).<br />
-                      <button
-                        onClick={() => setEditarPerfil(true)}
-                        style={{ marginTop: 8, background: '#ffb74d', color: '#000', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
-                      >Completar dirección</button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                // Inputs inline en la tarjeta superior para completar datos faltantes
-                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <input
-                    type="text"
-                    placeholder="Ciudad"
-                    list="ciudades-list"
-                    value={direccion.ciudad || ''}
-                    onChange={e => setDireccion({ ...direccion, ciudad: e.target.value })}
-                    className="w-full border rounded px-3 py-2"
-                    style={{ maxWidth: 350 }}
-                  />
-                  {ciudades.length > 0 && (
-                    <datalist id="ciudades-list">
-                      {ciudades.map((c, idx) => <option key={idx} value={c.name} />)}
-                    </datalist>
-                  )}
-                  <input
-                    type="text"
-                    placeholder="Barrio"
-                    value={direccion.barrio || ''}
-                    onChange={e => setDireccion({ ...direccion, barrio: e.target.value })}
-                    className="w-full border rounded px-3 py-2"
-                    style={{ maxWidth: 350 }}
-                  />
-                  <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                    <button
-                      onClick={() => {
-                        // Validar mínimos y guardar localmente
-                        const nombreCiudad = (direccion.ciudad || '').trim();
-                        const barrioVal = (direccion.barrio || '').trim();
-                        if (nombreCiudad.length < MIN_LENGTH) { setErrors(e => ({ ...e, ciudad: 'Ciudad inválida' })); return; }
-                        if (barrioVal.length < MIN_LENGTH) { setErrors(e => ({ ...e, barrio: 'Barrio inválido' })); return; }
-                        setFaltanCamposPerfil(false);
-                        setEditarPerfil(false);
-                        // No escribir al perfil en backend aquí; solo persistir para checkout
-                        // localStorage se actualizarizará en handleContinuar
-                      }}
-                      style={{ background: '#2979ff', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 12px', cursor: 'pointer' }}
-                    >Guardar</button>
-                    <button
-                      onClick={() => { setEditarPerfil(false); }}
-                      style={{ background: '#e0e0e0', color: '#000', border: 'none', borderRadius: 6, padding: '8px 12px', cursor: 'pointer' }}
-                    >Cancelar</button>
-                  </div>
+              {direccion.direccion}{direccion.barrio ? `, Barrio ${direccion.barrio}` : ''}{direccion.ciudad ? `, ${direccion.ciudad}` : ''}
+              {faltanCamposPerfil && (
+                <div style={{ marginTop: 8, color: '#d97706' }}>
+                  Tu perfil no tiene todos los campos de dirección (falta ciudad o barrio).<br />
+                  <button
+                    onClick={() => navigate('/perfil')}
+                    style={{ marginTop: 8, background: '#ffb74d', color: '#000', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                  >Ir a mi perfil</button>
                 </div>
               )}
             </div>

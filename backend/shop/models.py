@@ -15,6 +15,7 @@ class Usuario(AbstractUser):
     telefono = models.CharField(max_length=20, blank=True, null=True)
     reset_token = models.CharField(max_length=64, blank=True, null=True)
     direccion = models.CharField(max_length=255, blank=True, null=True)
+    barrio = models.CharField(max_length=150, blank=True, null=True)
     city = models.ForeignKey('City', on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios')
     # NUEVOS CAMPOS PERFIL DE VENTAS
     descripcion_perfil = models.CharField(max_length=500, blank=True, null=True)

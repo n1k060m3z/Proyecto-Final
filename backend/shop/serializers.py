@@ -102,7 +102,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = [
             'id', 'username', 'email', 'password', 'telefono', 'es_vendedor', 'direccion',
-            'descripcion_perfil', 'tiene_local', 'direccion_local', 'celular_contacto', 'city'
+            'descripcion_perfil', 'tiene_local', 'direccion_local', 'celular_contacto', 'city',
+            'barrio'
         ]
 
     def create(self, validated_data):
@@ -115,6 +116,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
             direccion=validated_data.get('direccion', ''),
             city=validated_data.get('city')
         )
+        # Guardar barrio si viene en los datos
+        barrio_val = validated_data.get('barrio')
+        if barrio_val:
+            user.barrio = barrio_val
+            user.save(update_fields=['barrio'])
         return user
 
 
