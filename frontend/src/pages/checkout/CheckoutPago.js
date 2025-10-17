@@ -188,7 +188,9 @@ const CheckoutPago = () => {
     } catch (e) {
       setCarritoItems([]);
     }
-    navigate('/resumen-pedido', { state: resumen });
+    // Redirigir con recarga completa para asegurar que la UI muestre los productos con stock actualizado
+    // (Resumen ya fue guardado en localStorage como 'ultimo_resumen_pedido')
+    window.location.href = '/resumen-pedido';
   };
 
   return (

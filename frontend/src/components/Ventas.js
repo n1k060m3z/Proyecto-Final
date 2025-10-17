@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import AgendaServicioFechas from './AgendaServicioFechas';
 import { getSolicitudesServicio, updateSolicitudServicio, negociarSolicitudServicio, aceptarPropuestaServicio, getProductosVendidos, crearCalificacion } from '../api/ventas';
+import { calcularNotificaciones } from '../api/notificaciones';
 import Estrellas from "./Estrellas";
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 
-const Ventas = ({ modoCompras, usuario }) => {
+const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones }) => {
   const [servicios, setServicios] = useState([]);
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +16,19 @@ const Ventas = ({ modoCompras, usuario }) => {
     const data = JSON.parse(localStorage.getItem('calificaciones_compras') || '{}');
     return data;
   });
+
+  // Helper para mostrar un badge con el estado legible y colores
+  const renderEstadoBadge = (estado) => {
+    let text = 'En espera';
+    let bg = '#f5f5f5';
+    let color = '#616161';
+    if (!estado) estado = 'pendiente';
+    if (estado === 'aceptado') { text = 'Aceptado'; bg = '#e6f4ea'; color = '#2e7d32'; }
+    else if (estado === 'rechazado') { text = 'Rechazado'; bg = '#fff0f0'; color = '#c62828'; }
+    else if (estado === 'negociacion') { text = 'En negociación'; bg = '#fffbe6'; color = '#ad8b00'; }
+    else if (estado === 'pendiente') { text = 'En espera'; bg = '#f5f5f5'; color = '#616161'; }
+    return <span style={{marginLeft:12, padding:'4px 8px', borderRadius:12, background:bg, color:color, fontWeight:700, fontSize:12}}>{text}</span>;
+  };
 
   // Al montar o cuando cambia el usuario, sincronizar con calificaciones guardadas en backend (/api/calificaciones/mis/)
   useEffect(() => {
@@ -258,6 +272,14 @@ const Ventas = ({ modoCompras, usuario }) => {
       const res = await updateSolicitudServicio(id, 'aceptado');
       // Si backend devuelve mensaje o el objeto actualizado
       setServicios(prev => prev.map(s => s.id === id ? { ...s, estado: 'aceptado', fecha: res.fecha || s.fecha, hora: res.hora || s.hora } : s));
+      // recalcular notificaciones globales
+      if (typeof setNotifsGlobal === 'function') {
+        const usuarioLocal = JSON.parse(localStorage.getItem('usuario_data') || '{}');
+        calcularNotificaciones && calcularNotificaciones(usuarioLocal).then(n => {
+          if (n && n.notifKey) localStorage.setItem('ultima_notif_key', n.notifKey);
+          setNotifsGlobal && setNotifsGlobal(n);
+        }).catch(()=>{});
+      }
     } catch (err) {
       console.error(err);
       alert('Error al aceptar la solicitud');
@@ -272,6 +294,14 @@ const Ventas = ({ modoCompras, usuario }) => {
       } else {
         // Si no se eliminó por alguna razón, marcar como rechazado en UI para permitir eliminar manualmente
         setServicios(prev => prev.map(s => s.id === id ? { ...s, estado: 'rechazado' } : s));
+      }
+      // recalcular notificaciones globales
+      if (typeof setNotifsGlobal === 'function') {
+        const usuarioLocal = JSON.parse(localStorage.getItem('usuario_data') || '{}');
+        calcularNotificaciones && calcularNotificaciones(usuarioLocal).then(n => {
+          if (n && n.notifKey) localStorage.setItem('ultima_notif_key', n.notifKey);
+          setNotifsGlobal && setNotifsGlobal(n);
+        }).catch(()=>{});
       }
     } catch (err) {
       console.error(err);
@@ -348,9 +378,18 @@ const Ventas = ({ modoCompras, usuario }) => {
                         onMouseOut={e=>{e.currentTarget.style.background='#2563eb';e.currentTarget.style.borderColor='#2563eb';}}
                         onClick={()=>eliminarSolicitud(servicio.id)}
                       >Eliminar</button>
-                      <div><b>{servicio.servicio_nombre}</b> <span style={{color:'#2563eb', marginLeft:6}}>{quienTexto}</span></div>
+                      <div style={{display:'flex', alignItems:'center', gap:8}}>
+                        <div style={{display:'flex', alignItems:'center'}}><b>{servicio.servicio_nombre}</b> <span style={{color:'#2563eb', marginLeft:6}}>{quienTexto}</span></div>
+                        {renderEstadoBadge(servicio.estado)}
+                      </div>
                       <div style={{fontSize:13, color:'#555'}}>Solicitado el {servicio.fecha_solicitud?.slice(0,10)}</div>
                       <div style={{fontSize:13, color:'#555'}}>Detalles: {servicio.detalles}</div>
+                      {/* Mostrar dirección provista por el comprador si existe */}
+                      {(servicio.direccion || servicio.barrio || servicio.ciudad || servicio.ciudad_nombre) && (
+                        <div style={{fontSize:13, color:'#555', marginTop:6}}>
+                          <b>Dirección:</b> {servicio.direccion || '—'}{servicio.barrio ? `, Barrio ${servicio.barrio}` : ''}{(servicio.ciudad_nombre || servicio.ciudad) ? `, ${servicio.ciudad_nombre || servicio.ciudad}` : ''}
+                        </div>
+                      )}
                       {/* Si existe negociación o propuesta */}
                       {servicio.estado === 'pendiente' || servicio.estado === 'negociacion' ? (
                         <div style={{marginTop:10}}>
@@ -465,9 +504,18 @@ const Ventas = ({ modoCompras, usuario }) => {
                          onMouseOut={e=>{e.currentTarget.style.background='#2563eb';e.currentTarget.style.borderColor='#2563eb';}}
                          onClick={()=>eliminarSolicitud(servicio.id)}
                        >Eliminar</button>
-                       <div><b>{servicio.servicio_nombre}</b> <span style={{color:'#2563eb', marginLeft:6}}>{quienTexto}</span></div>
+                       <div style={{display:'flex', alignItems:'center', gap:8}}>
+                         <div style={{display:'flex', alignItems:'center'}}><b>{servicio.servicio_nombre}</b> <span style={{color:'#2563eb', marginLeft:6}}>{quienTexto}</span></div>
+                         {renderEstadoBadge(servicio.estado)}
+                       </div>
                        <div style={{fontSize:13, color:'#555'}}>Solicitado el {servicio.fecha_solicitud?.slice(0,10)}</div>
                        <div style={{fontSize:13, color:'#555'}}>Detalles: {servicio.detalles}</div>
+                       {/* Mostrar dirección provista por el comprador si existe (vista vendedor) */}
+                       {(servicio.direccion || servicio.barrio || servicio.ciudad || servicio.ciudad_nombre) && (
+                         <div style={{fontSize:13, color:'#555', marginTop:6}}>
+                           <b>Dirección:</b> {servicio.direccion || '—'}{servicio.barrio ? `, Barrio ${servicio.barrio}` : ''}{(servicio.ciudad_nombre || servicio.ciudad) ? `, ${servicio.ciudad_nombre || servicio.ciudad}` : ''}
+                         </div>
+                       )}
                        {/* Negociación UI */}
                        {servicio.estado === 'pendiente' || servicio.estado === 'negociacion' ? (
                          <div style={{marginTop:10}}>
@@ -492,7 +540,8 @@ const Ventas = ({ modoCompras, usuario }) => {
                        <div style={{marginTop:8, display:'flex', gap:8}}>
                          {!modoCompras && <button onClick={()=>aceptarServicio(servicio.id)} style={{background:'#388e3c', color:'#fff', border:'none', borderRadius:4, padding:'6px 14px'}} disabled={servicio.estado!=='pendiente'}>Aceptar</button>}
                          {!modoCompras && <button onClick={()=>rechazarServicio(servicio.id)} style={{background:'#e53935', color:'#fff', border:'none', borderRadius:4, padding:'6px 14px'}} disabled={servicio.estado!=='pendiente'}>Rechazar</button>}
-                         <span style={{marginLeft:12, color:servicio.estado==='aceptado'?'#388e3c':servicio.estado==='rechazado'?'#e53935':'#888'}}>{servicio.estado}</span>
+                         {/* Badge de estado (reemplaza la etiqueta textual anterior) */}
+                         {renderEstadoBadge(servicio.estado)}
                        </div>
                        <div style={{marginTop:12}}>
                          <AgendaServicioFechas fechas={servicio.fecha && servicio.hora ? [{fecha: servicio.fecha, hora: servicio.hora}] : []} />
@@ -530,6 +579,14 @@ const Ventas = ({ modoCompras, usuario }) => {
                             await require('../api/ventas').marcarPedidoItemEnviado(producto.id);
                             // Actualizar estado local
                             setProductos(prev => prev.map(p => p.id === producto.id ? { ...p, enviado: true } : p));
+                            // recalcular notificaciones globales para comprador
+                            if (typeof setNotifsGlobal === 'function') {
+                              const usuarioLocal = JSON.parse(localStorage.getItem('usuario_data') || '{}');
+                              calcularNotificaciones && calcularNotificaciones(usuarioLocal).then(n => {
+                                if (n && n.notifKey) localStorage.setItem('ultima_notif_key', n.notifKey);
+                                setNotifsGlobal && setNotifsGlobal(n);
+                              }).catch(()=>{});
+                            }
                           } catch {
                             alert('Error al marcar como enviado');
                           }
