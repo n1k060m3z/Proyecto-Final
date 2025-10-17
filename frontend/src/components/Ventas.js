@@ -251,7 +251,14 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                 fechaVenta: pedido.creado,
                 precio: item.producto.precio,
                 metodo: item.metodo || 'contraentrega', // Si tienes campo metodo en item
-                enviado: item.enviado
+                enviado: item.enviado,
+                // Agregar datos de entrega tomados desde el pedido padre
+                entrega_direccion: pedido.entrega_direccion || pedido.entregaDireccion || '',
+                entrega_barrio: pedido.entrega_barrio || pedido.entregaBarrio || '',
+                entrega_ciudad: pedido.entrega_ciudad || pedido.entregaCiudad || '',
+                entrega_nombre: pedido.entrega_nombre || pedido.entregaNombre || '',
+                entrega_telefono: pedido.entrega_telefono || pedido.entregaTelefono || '',
+                entrega_correo: pedido.entrega_correo || pedido.entregaCorreo || ''
               }))
           );
           productosComprados = vendidos;
@@ -569,6 +576,15 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                   <div key={producto.id} style={{border:'1px solid #e3e3e3', borderRadius:8, padding:16, marginBottom:16, background:'#fff'}}>
                     <div><b>{producto.nombre}</b> vendido a <span style={{color:'#2563eb'}}>{producto.comprador}</span></div>
                     <div style={{fontSize:13, color:'#555'}}>Fecha de venta: {producto.fechaVenta}</div>
+                    {/* Mostrar dirección de entrega asociada al pedido */}
+                    {(producto.entrega_direccion || producto.entrega_barrio || producto.entrega_ciudad) && (
+                      <div style={{fontSize:13, color:'#555', marginTop:6}}>
+                        <div><b>Dirección de envío:</b> {producto.entrega_direccion || '-'}{producto.entrega_barrio ? `, Barrio ${producto.entrega_barrio}` : ''}{producto.entrega_ciudad ? `, ${producto.entrega_ciudad}` : ''}</div>
+                        {(producto.entrega_nombre || producto.entrega_telefono) && (
+                          <div style={{fontSize:13, color:'#555', marginTop:4}}><b>Contacto:</b> {producto.entrega_nombre || '-'}{producto.entrega_telefono ? ` — Tel: ${producto.entrega_telefono}` : ''}</div>
+                        )}
+                      </div>
+                    )}
                     <div style={{fontSize:13, color:'#555'}}>Precio: $ {producto.precio?.toLocaleString()}</div>
                     {/* Botón para marcar como enviado solo si es contraentrega y no enviado */}
                     {producto.metodo === 'contraentrega' && !producto.enviado && (
