@@ -208,6 +208,42 @@ const filtrosEjemplo = {
 	}, []);
 
 	useEffect(() => {
+		// Si hay búsqueda (parámetro q), esperar a que productos se cargue y extraer categoría/subcategoría
+		const params = new URLSearchParams(location.search);
+		const q = params.get('q');
+		if (q && productos.length > 0) {
+			// Tomar el primer producto encontrado para mostrar su categoría/subcategoría
+			const primerProducto = productos[0];
+			let categoriaNombre = '';
+			let subcategoriaNombre = '';
+			
+			// Extraer nombre de categoría
+			if (primerProducto.categoria) {
+				if (typeof primerProducto.categoria === 'object' && primerProducto.categoria.nombre) {
+					categoriaNombre = primerProducto.categoria.nombre;
+				} else if (typeof primerProducto.categoria === 'number') {
+					categoriaNombre = categoriaNombresPorDefecto[primerProducto.categoria] || '';
+				}
+			}
+			
+			// Extraer nombre de subcategoría
+			if (primerProducto.subcategoria) {
+				if (typeof primerProducto.subcategoria === 'object' && primerProducto.subcategoria.nombre) {
+					subcategoriaNombre = primerProducto.subcategoria.nombre;
+				}
+			}
+			
+			// Construir el título basado en lo que tenemos
+			if (categoriaNombre && subcategoriaNombre) {
+				setTitulo(`${categoriaNombre} - ${subcategoriaNombre}`);
+			} else if (categoriaNombre) {
+				setTitulo(categoriaNombre);
+			} else {
+				setTitulo(`Búsqueda: ${q}`);
+			}
+			return;
+		}
+		
 		if (subcategoriaId && categoriaId === "5") {
 			// Si es deportes y subcategoría, mostrar el nombre fijo
 			const sub = [
@@ -266,10 +302,11 @@ const filtrosEjemplo = {
 					const nombrePorDefecto = categoriaNombresPorDefecto[categoriaId] || "";
 					setTitulo(nombrePorDefecto);
 				});
-		} else {
+		} else if (!q) {
+			// Solo establecer "Hogar y Oficina" si no hay búsqueda
 			setTitulo("Hogar y Oficina");
 		}
-  }, [categoriaId, subcategoriaId]);
+  }, [categoriaId, subcategoriaId, productos, location.search]);
 
 	const handleOrdenChange = (e) => {
 		const value = e.target.value;
