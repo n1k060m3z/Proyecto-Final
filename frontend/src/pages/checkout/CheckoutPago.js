@@ -176,7 +176,16 @@ const CheckoutPago = () => {
       return;
     }
     // Guardar resumen ANTES de limpiar el carrito
-    const resumen = { items: carritoItems, total: carritoItems.reduce((acc, item) => acc + (item.producto?.precio || 0) * item.cantidad, 0), entrega: entregaObj, metodo: seleccion };
+    const resumen = { 
+      items: carritoItems, 
+      total: carritoItems.reduce((acc, item) => {
+        // Usar precio_pagado si está disponible (precio con descuento), sino precio original
+        const precioUnitario = item.precio_pagado || item.producto?.precio || 0;
+        return acc + precioUnitario * item.cantidad;
+      }, 0), 
+      entrega: entregaObj, 
+      metodo: seleccion 
+    };
     localStorage.setItem('ultimo_resumen_pedido', JSON.stringify(resumen));
     // Limpiar carrito local solo para frontend
     localStorage.removeItem('carrito');

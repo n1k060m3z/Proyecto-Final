@@ -64,24 +64,16 @@ const ProductosVendedor = () => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:8000/api/carrito/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ producto_id: productoId, cantidad })
-      });
-      if (res.ok) {
-        toast.success('Producto agregado al carrito');
-        // Actualizar carrito local
-        const nuevo = await res.json();
-        setCarrito((prev) => [...prev, nuevo]);
+      const res = await api.post('carrito/', { producto_id: productoId, cantidad });
+      toast.success('Producto agregado al carrito');
+      // Actualizar carrito local
+      setCarrito((prev) => [...prev, res.data]);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        toast.error('Debes iniciar sesión');
       } else {
         toast.error('No se pudo agregar al carrito');
       }
-    } catch {
-      toast.error('Error al conectar con el servidor');
     }
   };
 

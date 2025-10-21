@@ -92,10 +92,42 @@ class CarritoItemSerializer(serializers.ModelSerializer):
     producto_id = serializers.PrimaryKeyRelatedField(
         queryset=Producto.objects.all(), source='producto', write_only=True
     )
+    precio_pagado = serializers.SerializerMethodField()
 
     class Meta:
         model = CarritoItem
-        fields = ['id', 'producto', 'producto_id', 'cantidad']
+        fields = ['id', 'producto', 'producto_id', 'cantidad', 'precio_pagado']
+
+    def get_precio_pagado(self, obj):
+        """Calcular el precio con descuento aplicado"""
+        if not obj.producto:
+            return None
+        
+        precio_base = float(obj.producto.precio)
+        
+        # Aplicar descuento si el producto está en oferta
+        if obj.producto.en_oferta and obj.producto.descuento > 0:
+            precio_con_descuento = precio_base * (1 - obj.producto.descuento / 100)
+            return round(precio_con_descuento, 2)
+        
+        return precio_base
+
+    def create(self, validated_data):
+        carrito = validated_data['carrito']
+        producto = validated_data['producto']
+        cantidad = validated_data['cantidad']
+        
+        # Verificar si el producto ya existe en el carrito
+        existing_item = CarritoItem.objects.filter(carrito=carrito, producto=producto).first()
+        
+        if existing_item:
+            # Si ya existe, incrementar la cantidad
+            existing_item.cantidad += cantidad
+            existing_item.save()
+            return existing_item
+        else:
+            # Si no existe, crear nuevo item
+            return super().create(validated_data)
 
 
 # --- Serializer para Usuarios ---
@@ -165,7 +197,7 @@ class PedidoItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PedidoItem
-        fields = ['id', 'producto', 'cantidad', 'enviado', 'es_servicio']
+        fields = ['id', 'producto', 'cantidad', 'precio_pagado', 'enviado', 'es_servicio']
 
     def get_es_servicio(self, obj):
         try:

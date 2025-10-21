@@ -313,10 +313,16 @@ class PedidoCreateView(APIView):
                 )
                 affected = set()
                 for ci in items.select_related('producto'):
+                    # Calcular precio con descuento aplicado
+                    precio_unitario = float(ci.producto.precio)
+                    if ci.producto.en_oferta and ci.producto.descuento > 0:
+                        precio_unitario = precio_unitario * (1 - ci.producto.descuento / 100)
+                    
                     PedidoItem.objects.create(
                         pedido=pedido,
                         producto=ci.producto,
-                        cantidad=ci.cantidad
+                        cantidad=ci.cantidad,
+                        precio_pagado=precio_unitario
                     )
                     # Decrementar stock; no marcar como inactivo automáticamente.
                     prod = ci.producto

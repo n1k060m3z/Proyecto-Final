@@ -94,15 +94,36 @@ function ResumenPedido() {
         ) : (
           <>
             <div style={{ borderBottom: '1px solid #ddd', marginBottom: 12 }}>
-              {resumen.items.map((item) => (
-                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
-                  <div>
-                    <span style={{ fontWeight: 500 }}>{item.producto?.nombre || item.nombre || 'Producto'}</span>
-                    <span style={{ color: '#888', fontSize: 13, marginLeft: 8 }}>x{item.cantidad}</span>
+              {resumen.items.map((item) => {
+                // Usar precio_pagado si está disponible (precio con descuento), sino precio original
+                const precioUnitario = item.precio_pagado || item.producto?.precio || item.precio || 0;
+                const precioOriginal = item.producto?.precio || item.precio || 0;
+                const tieneDescuento = item.precio_pagado && item.precio_pagado < precioOriginal;
+                
+                return (
+                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                    <div>
+                      <span style={{ fontWeight: 500 }}>{item.producto?.nombre || item.nombre || 'Producto'}</span>
+                      <span style={{ color: '#888', fontSize: 13, marginLeft: 8 }}>x{item.cantidad}</span>
+                      {tieneDescuento && (
+                        <span style={{ marginLeft: 8, background: 'linear-gradient(45deg, #f44336, #ff9800)', color: 'white', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 'bold' }}>
+                          DESCUENTO
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontWeight: 500, color: tieneDescuento ? '#388e3c' : 'inherit' }}>
+                        ${(precioUnitario * item.cantidad).toLocaleString()}
+                      </span>
+                      {tieneDescuento && (
+                        <div style={{ fontSize: 12, color: '#999', textDecoration: 'line-through' }}>
+                          ${(precioOriginal * item.cantidad).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span style={{ fontWeight: 500 }}>${((item.producto?.precio ?? item.precio ?? 0) * item.cantidad).toLocaleString()}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div style={{ textAlign: 'right', fontWeight: 700, fontSize: 20 }}>
               Total a pagar: ${resumen.total.toLocaleString()}
