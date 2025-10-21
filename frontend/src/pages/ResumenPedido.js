@@ -50,7 +50,7 @@ function ResumenPedido() {
               setDatosUsuario(entrega);
               setMetodoPago(ultimo.metodo_pago || '');
               // También guardar en localStorage para siguientes vistas
-              const resumenBackend = { items: ultimo.items || [], total: ultimo.total || 0, entrega, metodo: ultimo.metodo_pago || '' };
+              const resumenBackend = { items: ultimo.items || [], total: ultimo.total || 0, shipping_cost: ultimo.shipping_cost || 0, entrega, metodo: ultimo.metodo_pago || '' };
               localStorage.setItem('ultimo_resumen_pedido', JSON.stringify(resumenBackend));
               setResumen(resumenBackend);
             }
@@ -125,8 +125,22 @@ function ResumenPedido() {
                 );
               })}
             </div>
-            <div style={{ textAlign: 'right', fontWeight: 700, fontSize: 20 }}>
-              Total a pagar: ${resumen.total.toLocaleString()}
+            <div style={{ textAlign: 'right', fontSize: 16, marginTop: 12 }}>
+              {resumen.subtotal && (
+                <>
+                  <div style={{ marginBottom: 4 }}>
+                    <span>Subtotal: ${resumen.subtotal.toLocaleString()}</span>
+                  </div>
+                  {(resumen.shipping_cost || resumen.shipping) && (resumen.shipping_cost || resumen.shipping) > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      <span>Envío: ${(resumen.shipping_cost || resumen.shipping).toLocaleString()}</span>
+                    </div>
+                  )}
+                </>
+              )}
+              <div style={{ fontWeight: 700, fontSize: 20, borderTop: '1px solid #ddd', paddingTop: 8 }}>
+                Total a pagar: ${resumen.total.toLocaleString()}
+              </div>
             </div>
           </>
         )}

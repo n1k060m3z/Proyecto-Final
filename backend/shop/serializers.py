@@ -223,7 +223,7 @@ class PedidoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pedido
-        fields = ['id', 'usuario', 'usuario_username', 'creado', 'total', 'items', 'entrega_nombre', 'entrega_correo', 'entrega_telefono', 'entrega_direccion', 'entrega_ciudad', 'entrega_barrio', 'metodo_pago']
+        fields = ['id', 'usuario', 'usuario_username', 'creado', 'total', 'shipping_cost', 'items', 'entrega_nombre', 'entrega_correo', 'entrega_telefono', 'entrega_direccion', 'entrega_ciudad', 'entrega_barrio', 'metodo_pago']
 
     def get_items(self, obj):
         request = self.context.get('request')

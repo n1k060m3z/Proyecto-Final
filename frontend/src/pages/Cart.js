@@ -257,8 +257,15 @@ function Cart() {
       };
     });
     
-    // Guardar los productos seleccionados con precios de descuento en localStorage para el flujo de checkout
+    // Guardar los productos seleccionados con precios de descuento y costo de envío en localStorage
+    const checkoutData = {
+      items: itemsConDescuento,
+      shipping: shipping,
+      total: total + shipping
+    };
+    
     localStorage.setItem('carrito', JSON.stringify(itemsConDescuento));
+    localStorage.setItem('checkout_data', JSON.stringify(checkoutData));
     navigate('/checkout/envio');
   };
 

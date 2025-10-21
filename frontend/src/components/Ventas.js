@@ -224,7 +224,10 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                 datosEntrega: item.datosEntrega,
                 precio: item.precio_pagado || item.producto?.precio || item.precio, // Usar precio con descuento si está disponible
                 precio_original: item.producto?.precio || item.precio,
-                tuvo_descuento: item.precio_pagado && item.producto?.precio && item.precio_pagado < item.producto.precio
+                tuvo_descuento: item.precio_pagado && item.producto?.precio && item.precio_pagado < item.producto.precio,
+                // Agregar información del pedido completo
+                pedido_total: compra.total,
+                pedido_shipping_cost: compra.shipping_cost || 0
               }))
             );
           } catch (e) {
@@ -484,6 +487,9 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                         </div>
                         <div style={{fontSize:14}}>Fecha de compra: {producto.fecha ? new Date(producto.fecha).toLocaleString() : ''}</div>
                         <div style={{fontSize:14}}>Método de pago: {producto.metodo}</div>
+                        {producto.pedido_shipping_cost && producto.pedido_shipping_cost > 0 && (
+                          <div style={{fontSize:14, color:'#666'}}>Costo de envío del pedido: ${producto.pedido_shipping_cost.toLocaleString()}</div>
+                        )}
                         {producto.metodo === 'contraentrega' && producto.enviado && (
                           <div style={{fontSize:13, color:'#388e3c'}}>Producto marcado como enviado</div>
                         )}
