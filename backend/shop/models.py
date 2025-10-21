@@ -112,6 +112,7 @@ class PedidoItem(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='items')
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
+    precio_pagado = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Precio unitario pagado (con descuento aplicado)')
     enviado = models.BooleanField(default=False, help_text='El vendedor marcó este producto como enviado')
 
     def __str__(self):

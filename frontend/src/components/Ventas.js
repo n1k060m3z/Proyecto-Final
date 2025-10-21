@@ -221,7 +221,10 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                 compraId: compra.id,
                 fecha: compra.creado || compra.fecha,
                 metodo: item.metodo || 'contraentrega',
-                datosEntrega: item.datosEntrega
+                datosEntrega: item.datosEntrega,
+                precio: item.precio_pagado || item.producto?.precio || item.precio, // Usar precio con descuento si está disponible
+                precio_original: item.producto?.precio || item.precio,
+                tuvo_descuento: item.precio_pagado && item.producto?.precio && item.precio_pagado < item.producto.precio
               }))
             );
           } catch (e) {
@@ -233,7 +236,10 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                 compraId: compra.id,
                 fecha: compra.fecha,
                 metodo: compra.metodo,
-                datosEntrega: compra.datosEntrega
+                datosEntrega: compra.datosEntrega,
+                precio: item.precio_pagado || item.precio, // Usar precio con descuento si está disponible
+                precio_original: item.precio_original || item.precio,
+                tuvo_descuento: item.precio_pagado && item.precio_original && item.precio_pagado < item.precio_original
               }))
             );
           }
@@ -249,7 +255,9 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                 nombre: item.producto.nombre,
                 comprador: pedido.usuario_username || pedido.usuario, // Ajusta según backend
                 fechaVenta: pedido.creado,
-                precio: item.producto.precio,
+                precio: item.precio_pagado || item.producto.precio, // Usar precio con descuento si está disponible
+                precio_original: item.producto.precio,
+                tuvo_descuento: item.precio_pagado && item.precio_pagado < item.producto.precio,
                 metodo: item.metodo || 'contraentrega', // Si tienes campo metodo en item
                 enviado: item.enviado,
                 // Agregar datos de entrega tomados desde el pedido padre
@@ -461,7 +469,19 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                           )}
                         </div>
                         <div style={{fontSize:14}}>Cantidad: {producto.cantidad}</div>
-                        <div style={{fontSize:14}}>Precio unitario: ${producto.producto?.precio?.toLocaleString() || producto.precio?.toLocaleString() || '0'}</div>
+                        <div style={{fontSize:14}}>
+                          Precio pagado: $ {producto.precio?.toLocaleString()}
+                          {producto.tuvo_descuento && (
+                            <span style={{marginLeft:8, textDecoration:'line-through', color:'#999'}}>
+                              (Original: ${producto.precio_original?.toLocaleString()})
+                            </span>
+                          )}
+                          {producto.tuvo_descuento && (
+                            <span style={{marginLeft:8, background:'linear-gradient(45deg, #f44336, #ff9800)', color:'white', padding:'2px 6px', borderRadius:4, fontSize:11, fontWeight:'bold'}}>
+                              DESCUENTO APLICADO
+                            </span>
+                          )}
+                        </div>
                         <div style={{fontSize:14}}>Fecha de compra: {producto.fecha ? new Date(producto.fecha).toLocaleString() : ''}</div>
                         <div style={{fontSize:14}}>Método de pago: {producto.metodo}</div>
                         {producto.metodo === 'contraentrega' && producto.enviado && (
@@ -469,7 +489,7 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                         )}
                       </div>
                       <div style={{fontWeight:700, fontSize:18, color:'#2563eb'}}>
-                        Total: ${(producto.producto?.precio || producto.precio || 0) * producto.cantidad}
+                        Total: ${(producto.precio_pagado ? parseFloat(producto.precio_pagado) : (producto.producto?.precio || producto.precio || 0)) * producto.cantidad}
                       </div>
                       <button
                         className="btn-eliminar-solicitud"
@@ -585,7 +605,19 @@ const Ventas = ({ modoCompras, usuario, setNotifsGlobal, calcularNotificaciones 
                         )}
                       </div>
                     )}
-                    <div style={{fontSize:13, color:'#555'}}>Precio: $ {producto.precio?.toLocaleString()}</div>
+                    <div style={{fontSize:13, color:'#555'}}>
+                      Precio: $ {producto.precio?.toLocaleString()}
+                      {producto.tuvo_descuento && (
+                        <span style={{marginLeft:8, textDecoration:'line-through', color:'#999'}}>
+                          (Original: ${producto.precio_original?.toLocaleString()})
+                        </span>
+                      )}
+                      {producto.tuvo_descuento && (
+                        <span style={{marginLeft:8, background:'linear-gradient(45deg, #f44336, #ff9800)', color:'white', padding:'2px 6px', borderRadius:4, fontSize:11, fontWeight:'bold'}}>
+                          DESCUENTO APLICADO
+                        </span>
+                      )}
+                    </div>
                     {/* Botón para marcar como enviado solo si es contraentrega y no enviado */}
                     {producto.metodo === 'contraentrega' && !producto.enviado && (
                       <button
