@@ -25,6 +25,11 @@ class ProductoSerializer(serializers.ModelSerializer):
     categoria_id = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.all(), source='categoria', write_only=True, required=False
     )
+    # -- añadir representación anidada de subcategoría y campo de escritura --
+    subcategoria = SubcategoriaSerializer(read_only=True)
+    subcategoria_id = serializers.PrimaryKeyRelatedField(
+        queryset=Subcategoria.objects.all(), source='subcategoria', write_only=True, required=False, allow_null=True
+    )
     vendedor = serializers.SerializerMethodField()
     precio_con_descuento = serializers.SerializerMethodField()
     activo = serializers.BooleanField(default=True)  # <-- Agregado campo activo
