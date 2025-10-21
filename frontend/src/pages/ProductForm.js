@@ -69,7 +69,7 @@ function ProductForm() {
 
   return (
     <form className="product-form" onSubmit={handleSubmit}>
-      <h2>Subir nuevo producto</h2>
+      <h2>Subir nuevo Producto / Servicio</h2>
       <label>Nombre</label>
       <input type="text" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} required />
       <label>Descripción</label>

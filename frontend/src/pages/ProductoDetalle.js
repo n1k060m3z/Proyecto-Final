@@ -159,8 +159,47 @@ const ProductoDetalle = () => {
           {/* Estrellas removidas; mostrar solo texto si hay reseñas */}
           <div style={{fontSize:13,color:'#666',marginTop:6}}>{producto.rating_count ? `${producto.rating_count} reseñas` : 'Sin calificaciones'}</div>
         </div>
-        <div style={{ fontSize: 20, color: '#444', fontWeight: 600, marginBottom: 16 }}>
-          {producto.precio ? `$ ${Math.floor(producto.precio).toLocaleString()}` : 'Precio a convenir'}
+        
+        {/* SECCIÓN DE PRECIO CON DESCUENTO */}
+        <div style={{ marginBottom: 16 }}>
+          {/* Verificar si hay descuento usando en_oferta y descuento > 0 */}
+          {producto.en_oferta && producto.descuento > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              {/* Precio original tachado */}
+              <span style={{ 
+                fontSize: 18, 
+                color: '#888', 
+                textDecoration: 'line-through',
+                fontWeight: 500
+              }}>
+                $ {Math.floor(producto.precio).toLocaleString()}
+              </span>
+              {/* Badge de descuento */}
+              <span style={{
+                background: 'linear-gradient(135deg, #e53935 0%, #c62828 100%)',
+                color: '#fff',
+                padding: '4px 8px',
+                borderRadius: 6,
+                fontSize: 14,
+                fontWeight: 700,
+                boxShadow: '0 2px 4px rgba(229, 57, 53, 0.3)'
+              }}>
+                -{producto.descuento}%
+              </span>
+            </div>
+          )}
+          {/* Precio actual */}
+          <div style={{ 
+            fontSize: 24, 
+            color: (producto.en_oferta && producto.descuento > 0) ? '#2e7d32' : '#444', 
+            fontWeight: 700 
+          }}>
+            {producto.en_oferta && producto.descuento > 0 ? (
+              `$ ${Math.floor(producto.precio_con_descuento || (producto.precio * (1 - producto.descuento / 100))).toLocaleString()}`
+            ) : (
+              producto.precio ? `$ ${Math.floor(producto.precio).toLocaleString()}` : 'Precio a convenir'
+            )}
+          </div>
         </div>
         <div style={{ fontSize: 16, color: '#222', marginBottom: 24 }}>
           <b>Descripción:</b><br />
