@@ -94,6 +94,7 @@ class Pedido(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='pedidos')
     creado = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True, null=True)
 
     # Campos para datos de entrega (persistir la info ingresada en checkout)
     entrega_nombre = models.CharField(max_length=150, blank=True, null=True)
