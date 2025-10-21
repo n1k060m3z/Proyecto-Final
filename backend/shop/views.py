@@ -127,13 +127,8 @@ class ProductoListView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        user = request.user if request.user.is_authenticated else None
-        if user and hasattr(user, 'es_vendedor') and user.es_vendedor:
-            # Si es vendedor, mostrar todos sus productos (activos y pausados)
-            productos = Producto.objects.filter(vendedor=user)
-        else:
-            # Si es cliente o no autenticado, solo productos activos
-            productos = Producto.objects.filter(activo=True)
+        # Vista pública: mostrar todos los productos activos
+        productos = Producto.objects.filter(activo=True)
         serializer = ProductoSerializer(productos, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -274,7 +269,17 @@ class PedidoCreateView(APIView):
             logger.warning(f"[PedidoCreateView] No se encontraron items en el carrito para los IDs solicitados. solicitados={ids} existentes={[i.id for i in carrito.items.all()]}")
             return Response({'error': 'No se encontraron productos seleccionados'}, status=status.HTTP_400_BAD_REQUEST)
 
-        total = sum(item.producto.precio * item.cantidad for item in items)
+        # Calcular subtotal con precios con descuento aplicado
+        subtotal = 0
+        for item in items:
+            precio_unitario = float(item.producto.precio)
+            if item.producto.en_oferta and item.producto.descuento > 0:
+                precio_unitario = precio_unitario * (1 - item.producto.descuento / 100)
+            subtotal += precio_unitario * item.cantidad
+
+        # Obtener costo de envío del payload (por defecto 12300)
+        shipping_cost = float(data.get('shipping', 12300)) if isinstance(data, dict) else 12300
+        total = subtotal + shipping_cost
 
         # Leer datos de entrega desde el payload (si vienen)
         entrega = {}
@@ -303,6 +308,7 @@ class PedidoCreateView(APIView):
                 pedido = Pedido.objects.create(
                     usuario=usuario,
                     total=total,
+                    shipping_cost=shipping_cost,
                     entrega_nombre=entrega_nombre,
                     entrega_correo=entrega_correo,
                     entrega_telefono=entrega_telefono,
@@ -356,16 +362,13 @@ class PedidoListView(APIView):
 
 # --- Vista para listar productos por categoría ---
 class ProductosPorCategoriaView(generics.ListAPIView):
-    """Lista los productos de una categoría. Si el usuario es vendedor devuelve sus productos (incluyendo pausados),
-    si es cliente o anónimo devuelve solo productos activos."""
+    """Lista los productos activos de una categoría para vista pública."""
     serializer_class = ProductoSerializer
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         categoria_id = self.kwargs.get('categoria_id')
-        user = self.request.user if self.request.user.is_authenticated else None
-        if user and getattr(user, 'es_vendedor', False):
-            return Producto.objects.filter(categoria_id=categoria_id, vendedor=user)
+        # Vista pública: mostrar todos los productos activos de la categoría
         return Producto.objects.filter(categoria_id=categoria_id, activo=True)
 from .serializers import UsuarioPublicoSerializer, CitySerializer
 
@@ -380,9 +383,7 @@ class ProductosPorSubcategoriaView(generics.ListAPIView):
 
     def get_queryset(self):
         subcategoria_id = self.kwargs.get('subcategoria_id')
-        user = self.request.user if self.request.user.is_authenticated else None
-        if user and getattr(user, 'es_vendedor', False):
-            return Producto.objects.filter(subcategoria_id=subcategoria_id, vendedor=user)
+        # Vista pública: mostrar todos los productos activos de la subcategoría
         return Producto.objects.filter(subcategoria_id=subcategoria_id, activo=True)
 
 class ProductosEnOfertaPorCategoriaView(generics.ListAPIView):
@@ -393,12 +394,12 @@ class ProductosEnOfertaPorCategoriaView(generics.ListAPIView):
         categoria_id = self.kwargs.get('categoria_id')
         user = self.request.user if self.request.user.is_authenticated else None
         categoria_ofertas = Categoria.objects.filter(nombre__iexact='Ofertas').first()
-        if user and getattr(user, 'es_vendedor', False):
-            if categoria_ofertas and str(categoria_id) == str(categoria_ofertas.id):
-                return Producto.objects.filter(en_oferta=True, vendedor=user)
-            return Producto.objects.filter(categoria_id=categoria_id, en_oferta=True, vendedor=user)
+        
+        # Para la categoría "Ofertas", mostrar todos los productos en oferta activos
         if categoria_ofertas and str(categoria_id) == str(categoria_ofertas.id):
             return Producto.objects.filter(en_oferta=True, activo=True)
+        
+        # Para otras categorías, mostrar productos en oferta de esa categoría
         return Producto.objects.filter(categoria_id=categoria_id, en_oferta=True, activo=True)
 
 class ProductosPorVendedorView(generics.ListAPIView):

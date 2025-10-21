@@ -25,6 +25,7 @@ const CheckoutPago = () => {
   const [form, setForm] = useState(datosUsuarioDefault);
   const [formValido, setFormValido] = useState(false);
   const [carritoItems, setCarritoItems] = useState([]);
+  const [shippingCost, setShippingCost] = useState(0);
   const navigate = useNavigate();
 
   // Al montar, asegurar que usuario_data esté en localStorage y tenga username y email
@@ -110,8 +111,22 @@ const CheckoutPago = () => {
     }
   }, [form, seleccion]);
 
-  // Obtener los items reales del carrito del backend
+  // Obtener los items reales del carrito del backend y datos de checkout
   useEffect(() => {
+    // Cargar datos del checkout (incluye shipping)
+    const checkoutDataLS = localStorage.getItem('checkout_data');
+    if (checkoutDataLS) {
+      try {
+        const checkoutData = JSON.parse(checkoutDataLS);
+        setShippingCost(checkoutData.shipping || 0);
+      } catch (e) {
+        setShippingCost(0);
+      }
+    } else {
+      // Si no hay datos de checkout, calcular shipping basado en items
+      setShippingCost(12300); // Default shipping cost
+    }
+
     api.get('carrito/', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
@@ -169,20 +184,24 @@ const CheckoutPago = () => {
     }
 
     try {
-      await crearPedido(ids, entregaObj, seleccion);
+      await crearPedido(ids, entregaObj, seleccion, shippingCost);
     } catch (err) {
       console.error('Error al crear pedido:', err);
       alert('Error al crear el pedido en el backend');
       return;
     }
     // Guardar resumen ANTES de limpiar el carrito
+    const subtotal = carritoItems.reduce((acc, item) => {
+      // Usar precio_pagado si está disponible (precio con descuento), sino precio original
+      const precioUnitario = item.precio_pagado || item.producto?.precio || 0;
+      return acc + precioUnitario * item.cantidad;
+    }, 0);
+    
     const resumen = { 
       items: carritoItems, 
-      total: carritoItems.reduce((acc, item) => {
-        // Usar precio_pagado si está disponible (precio con descuento), sino precio original
-        const precioUnitario = item.precio_pagado || item.producto?.precio || 0;
-        return acc + precioUnitario * item.cantidad;
-      }, 0), 
+      subtotal: subtotal,
+      shipping: shippingCost,
+      total: subtotal + shippingCost, 
       entrega: entregaObj, 
       metodo: seleccion 
     };
