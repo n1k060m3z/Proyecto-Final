@@ -12,6 +12,7 @@ const Register = ({ setIsAuthenticated, setEsVendedor }) => {
   });
 
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(false);
   const navigate = useNavigate();
 
   const passwordRequirements = [
@@ -45,8 +46,14 @@ const Register = ({ setIsAuthenticated, setEsVendedor }) => {
       const data = await response.json();
 
       if (response.ok) {
+        setSuccessMessage(true);
         toast.success('Usuario registrado con éxito');
-        navigate('/iniciar-sesion');
+        
+        // Ocultar el mensaje después de 3 segundos y redirigir
+        setTimeout(() => {
+          setSuccessMessage(false);
+          navigate('/iniciar-sesion');
+        }, 3000);
       } else {
         setError(data.error || 'Error en el registro');
         toast.error(data.error || 'Error en el registro');
@@ -87,6 +94,35 @@ const Register = ({ setIsAuthenticated, setEsVendedor }) => {
           fontSize: 28,
           letterSpacing: 0.5
         }}>Registro</h2>
+        
+        {successMessage && (
+          <div style={{
+            color: '#2e7d32',
+            background: 'linear-gradient(120deg, #e8f5e8 60%, #c8e6c9 100%)',
+            borderRadius: 12,
+            padding: '16px 20px',
+            width: '100%',
+            textAlign: 'center',
+            marginBottom: 20,
+            fontWeight: 600,
+            fontSize: 16,
+            border: '2px solid #4caf50',
+            boxShadow: '0 4px 16px rgba(76, 175, 80, 0.15)',
+            animation: 'fadeInScale 0.4s ease-out',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8
+          }}>
+            <span style={{
+              fontSize: 20,
+              display: 'inline-block',
+              animation: 'bounce 1s infinite'
+            }}>✅</span>
+            ¡Usuario registrado con éxito!
+          </div>
+        )}
+        
         {error && <div style={{ color: '#e53935', background: '#ffeaea', borderRadius: 8, padding: '8px 0', width: '100%', textAlign: 'center', marginBottom: 10, fontWeight: 500 }}>{error}</div>}
         <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
           <input
@@ -141,7 +177,7 @@ const Register = ({ setIsAuthenticated, setEsVendedor }) => {
               onChange={handleChange}
               style={{ accentColor: '#2563eb', width: 18, height: 18, marginRight: 6 }}
             />
-            ¿Deseas registrarte como vendedor?
+            ¿Deseas registrarte como Vendedor/Proveedor?
           </label>
           <button type="submit" style={{
             background: 'linear-gradient(90deg, #ff6a00 60%, #ff9800 100%)',
