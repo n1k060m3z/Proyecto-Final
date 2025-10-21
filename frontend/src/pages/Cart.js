@@ -242,8 +242,23 @@ function Cart() {
 
   // Navegar al flujo de checkout anidado
   const finalizarCompra = () => {
-    // Guardar los productos seleccionados en localStorage para el flujo de checkout
-    localStorage.setItem('carrito', JSON.stringify(selectedItems));
+    // Calcular precio con descuento para cada item seleccionado
+    const itemsConDescuento = selectedItems.map(item => {
+      if (!item.producto) return item;
+      
+      let precioConDescuento = parseFloat(item.producto.precio);
+      if (item.producto.en_oferta && item.producto.descuento > 0) {
+        precioConDescuento = precioConDescuento * (1 - item.producto.descuento / 100);
+      }
+      
+      return {
+        ...item,
+        precio_pagado: precioConDescuento
+      };
+    });
+    
+    // Guardar los productos seleccionados con precios de descuento en localStorage para el flujo de checkout
+    localStorage.setItem('carrito', JSON.stringify(itemsConDescuento));
     navigate('/checkout/envio');
   };
 
